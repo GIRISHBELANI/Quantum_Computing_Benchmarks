@@ -68,7 +68,6 @@ ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Install web-browser and sudo
 RUN apt-get update && \
-    apt-get install -y firefox xvfb && \
     apt-get install -y sudo && \
     rm -rf /var/lib/apt/lists/*
 
@@ -105,5 +104,5 @@ ADD ${BROOT}/vqe ${PROJECT_DIR}/vqe
 COPY ${BROOT}/benchmarks-qiskit.ipynb/ ${PROJECT_DIR}/benchmarks-qiskit.ipynb
 COPY ${BROOT}/_common/metrics.py ${PROJECT_DIR}/
 
-EXPOSE 8889
-CMD ["jupyter", "notebook", "--port=8889", "--ip=0.0.0.0", "--no-browser", "--allow-root"]
+EXPOSE 8888
+CMD ["jupyter", "notebook", "--port=8888", "--ip=0.0.0.0", "--no-browser", "--allow-root"]
