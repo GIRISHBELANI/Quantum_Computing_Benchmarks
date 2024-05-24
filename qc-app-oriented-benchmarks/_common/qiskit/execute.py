@@ -203,11 +203,13 @@ def default_noise_model():
     noise.add_all_qubit_readout_error(error_meas)
     
     # assign a quantum volume (measured using the values below)
-    noise.QV = 2048
+    noise.QV = 2048         # High QV ---> Low noise, high fidelity, accurate probability distribution, better performance.
+                            # Low QV ---> High noise, low fidelity, noisier measurement outcomes, realistic performance.
     
     return noise
 
-noise = default_noise_model()
+noise = default_noise_model()  # for noisy simulation
+# noise = None                 # for noise-free simulation
 
 
 ######################################################################
@@ -427,7 +429,7 @@ def set_tranpilation_flags(do_transpile_metrics = True, do_transpile_for_execute
     globals()['do_transpile_metrics'] = do_transpile_metrics
     globals()['do_transpile_for_execute'] = do_transpile_for_execute
     
-
+'''
 def set_noise_model(noise_model = None):
     """
     See reference on NoiseModel here https://qiskit.org/documentation/stubs/qiskit.providers.aer.noise.NoiseModel.html
@@ -455,6 +457,32 @@ def set_noise_model(noise_model = None):
     
     global noise
     noise = noise_model
+'''
+
+def set_noise_model(noise_model=None):
+    """
+    See reference on NoiseModel here https://qiskit.org/documentation/stubs/qiskit.providers.aer.noise.NoiseModel.html
+
+    Need to pass in a qiskit noise model object, i.e. for amplitude_damping_error:
+    """
+
+    from qiskit.providers.aer.noise import NoiseModel, amplitude_damping_error
+
+    if noise_model is None:
+        # If noise_model is None, reset the global noise variable to None
+        global noise
+        noise = None
+    else:
+        # If noise_model is provided, set the global noise variable to the provided noise model
+        noise = noise_model
+
+        # Example of setting amplitude damping error for single-qubit gates
+        one_qb_error = 0.005
+        noise.add_all_qubit_quantum_error(amplitude_damping_error(one_qb_error), ['u1', 'u2', 'u3'])
+
+        # Example of setting amplitude damping error for two-qubit gates (e.g., CX gate)
+        two_qb_error = 0.5
+        noise.add_all_qubit_quantum_error(amplitude_damping_error(two_qb_error).tensor(amplitude_damping_error(two_qb_error)), ['cx'])
 
 
 # set flag to control use of sessions
