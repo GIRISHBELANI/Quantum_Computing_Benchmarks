@@ -122,6 +122,38 @@ Once built, deployed, and launched, the container process invokes a Jupyter Note
 - **Fidelity:** a measure of how well the simulator or hardware runs a particular benchmark, on a scale from 0 to 1, with 0 being a completely useless result and 1 being perfect execution of the algorithm. The math of how we calculate the fidelity is outlined in the file [`_doc/POLARIZATION_FIDELITY.md`](./_doc/POLARIZATION_FIDELITY.md).
 - **Circuit/Transpiled Depth:** number of layers of gates to apply a particular algorithm. The Circuit depth is the depth if all of the gates used for the algorithm were native, while the transpile depth is the number of gates if only certain gates are allowed. We default to `['rx', 'ry', 'rz', 'cx']`. Note: this set of gates is just used to provide a normalized transpiled depth across all hardware and simulator platforms, and we separately transpile to the native gate set of the hardware. The depth can be used to help provide reasoning for why one algorithm is harder to run than another for the same circuit width. This metric is currently only available on the Qiskit implementation of the algorithms.
 
+## Noise Model Implementation
+
+#### `default_noise_model` Function
+- **Purpose:** Creates a comprehensive `NoiseModel` simulating various quantum errors.
+- **Errors Included:**
+  - **Depolarizing Error:** 
+    - Single-qubit gates (`u1`, `u2`, `u3`, `rx`, `ry`, `rz`): 0.05% error rate.
+    - Two-qubit gates (`cx`): 0.5% error rate.
+  - **Amplitude Damping Error:**
+    - Single-qubit gates: 0.1% error rate.
+    - Two-qubit gates: 1% error rate.
+  - **Reset Error:** 
+    - Reset to 0 and 1: 0.5% error rate each.
+  - **Readout Error:** 
+    - 1% error for both `p(0|1)` and `p(1|0)`.
+- **Quantum Volume (QV):** Set to 2048 for metadata purposes.
+- **Quantum Volume Interpretation:** 
+  - **High QV:** Lower noise, higher fidelity, accurate probability distribution, better performance.
+  - **Low QV:** Higher noise, lower fidelity, noisier measurement outcomes, realistic performance.
+- **Return:** Configured `NoiseModel`.
+
+#### `set_noise_model` Function
+- **Purpose:** Sets a custom noise model or disables noise simulation.
+- **Parameters:** Accepts a `NoiseModel` object or `None`.
+- **Functionality:**
+  - Allows setting of custom noise models.
+  - Can disable noise by passing `None`.
+- **Reference:** See [NoiseModel documentation](https://qiskit.org/documentation/stubs/qiskit.providers.aer.noise.NoiseModel.html) for more details.
+
+These functions enable realistic simulation of quantum circuits by incorporating various error models, enhancing the robustness of quantum algorithm development.
+
+
 ## Implementation Status
 
 Below is a table showing the degree to which the benchmarks have been implemented in each of the target platforms (as of the last update to this branch):
