@@ -3155,6 +3155,7 @@ def plot_volumetric_background(max_qubits=11, QV=32, depth_base=2, suptitle=None
     if max_qubits > 11: max_width = 18
     if max_qubits > 14: max_width = 20
     if max_qubits > 16: max_width = 24
+    if max_qubits > 24: max_width = 32
     #print(f"... {avail_qubits} {max_qubits} {max_width}")
     
     plot_width = 6.8
@@ -3289,6 +3290,7 @@ def plot_volumetric_background_aq(max_qubits=11, AQ=12, depth_base=2, suptitle=N
     if max_qubits > 11: max_width = 18
     if max_qubits > 14: max_width = 20
     if max_qubits > 16: max_width = 24
+    if max_qubits > 24: max_width = 32
     #print(f"... {avail_qubits} {max_qubits} {max_width}")
     
     seed = 6.8
