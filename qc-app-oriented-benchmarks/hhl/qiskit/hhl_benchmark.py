@@ -649,7 +649,7 @@ def analyze_and_print_result (qc, result, num_qubits, s_int, num_shots):
 # assumption that num_input_qubits ~= num_clock_qubits and num_input_qubits < num_clock_qubits:
 #      num_qubits = 2 * num_input_qubits + num_clock_qubits + 1 (the ancilla)
 
-def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100,
+def run (min_qubits=3, max_qubits=31, skip_qubits=1, max_circuits=3, num_shots=1000,
         method = 1, use_best_widths=True,
         backend_id='qasm_simulator', provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
@@ -704,9 +704,9 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=10
 # arbitrary range of input and clock qubit widths
 # The benchmark sweeps over all input widths and clock widths in the range specified
 
-def run2 (min_input_qubits=1, max_input_qubits=3, skip_qubits=1,
+def run2 (min_input_qubits=1, max_input_qubits=31, skip_qubits=1,
         min_clock_qubits=1, max_clock_qubits=3,
-        max_circuits=3, num_shots=100,
+        max_circuits=3, num_shots=1000,
         method=2, use_best_widths=False,
         backend_id='qasm_simulator', provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
