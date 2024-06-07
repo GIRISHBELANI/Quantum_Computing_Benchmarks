@@ -162,6 +162,7 @@ def analyze_and_print_result(qc, result, num_counting_qubits, s_int, num_shots):
         
     counts = bitstring_to_a(counts_str, num_counting_qubits)
     a = a_from_s_int(s_int, num_counting_qubits)
+    a = str(a)     #correction
     
     if verbose: print(f"For amplitude {a} measured: {counts}")
     
