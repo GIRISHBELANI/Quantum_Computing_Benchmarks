@@ -162,12 +162,12 @@ def analyze_and_print_result(qc, result, num_counting_qubits, s_int, num_shots):
         
     counts = bitstring_to_a(counts_str, num_counting_qubits)
     a = a_from_s_int(s_int, num_counting_qubits)
-    a = str(a)     #correction
     
     if verbose: print(f"For amplitude {a} measured: {counts}")
     
     # correct distribution is measuring amplitude a 100% of the time
     correct_dist = {a: 1.0}
+    correct_dist = {str(key): value for key, value in correct_dist.items()}   #convert the keys of the correct_dist dictionary into strings 
 
     # generate thermal_dist with amplitudes instead, to be comparable to correct_dist
     bit_thermal_dist = metrics.uniform_dist(num_counting_qubits)

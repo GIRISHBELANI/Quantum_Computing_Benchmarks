@@ -256,6 +256,7 @@ def analyze_and_print_result(qc, result, num_counting_qubits, mu, num_shots, met
     
     # calculate the distribution we should expect from the amplitude estimation routine
     correct_dist = mc_utils.mc_dist(num_counting_qubits, exact, c_star, method)
+    correct_dist = {str(key): value for key, value in correct_dist.items()}   #convert the keys of the correct_dist dictionary into strings 
 
     # generate thermal_dist with amplitudes instead, to be comparable to correct_dist
     bit_thermal_dist = metrics.uniform_dist(num_counting_qubits)
