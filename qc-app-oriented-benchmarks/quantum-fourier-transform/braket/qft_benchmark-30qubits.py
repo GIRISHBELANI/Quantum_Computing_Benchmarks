@@ -257,7 +257,7 @@ def analyze_and_print_result (qc, result, num_qubits, secret_int, method):
 ################ Benchmark Loop
 
 # Execute program with default parameters
-def run (min_qubits = 2, max_qubits = 8, max_circuits = 3, num_shots = 1000,
+def run (min_qubits = 2, max_qubits = 30, max_circuits = 3, num_shots = 1000,
         method=1,
         backend_id = 'simulator'):
 

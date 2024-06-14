@@ -110,7 +110,7 @@ def analyze_and_print_result (qc, result, num_qubits, secret_int):
 ################ Benchmark Loop
         
 # Execute program with default parameters
-def run (min_qubits=3, max_qubits=6, max_circuits=3, num_shots=100, backend_id='simulator'):
+def run (min_qubits=3, max_qubits=6, max_circuits=3, num_shots=1000, backend_id='simulator'):
 
     print("Bernstein-Vazirani Benchmark Program - Braket")
 
