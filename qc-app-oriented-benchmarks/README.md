@@ -121,7 +121,8 @@ Once built, deployed, and launched, the container process invokes a Jupyter Note
 - **Execution Time:** time spent on the quantum simulator or hardware backend running the circuit. This only includes the time when the algorithm is being run and does not include any of the time waiting in a queue on Qiskit and Cirq. Braket does not currently report execution time and therefore does include the queue time.
 - **Fidelity:** a measure of how well the simulator or hardware runs a particular benchmark, on a scale from 0 to 1, with 0 being a completely useless result and 1 being perfect execution of the algorithm. The math of how we calculate the fidelity is outlined in the file [`_doc/POLARIZATION_FIDELITY.md`](./_doc/POLARIZATION_FIDELITY.md).
 - **Circuit/Transpiled Depth:** number of layers of gates to apply a particular algorithm. The Circuit depth is the depth if all of the gates used for the algorithm were native, while the transpile depth is the number of gates if only certain gates are allowed. We default to `['rx', 'ry', 'rz', 'cx']`. Note: this set of gates is just used to provide a normalized transpiled depth across all hardware and simulator platforms, and we separately transpile to the native gate set of the hardware. The depth can be used to help provide reasoning for why one algorithm is harder to run than another for the same circuit width. This metric is currently only available on the Qiskit implementation of the algorithms.
-
+- **Memory usage (optional):** introduced `plot_memory_usage` global variable to plot the amount of memory required by each qubits for executing in MB. Set `plot_memory_usage` as `True` to get the plots in .ipynb files (jupyter notebook files). For python file (.py) follow the example given in the **Fake Backend** section.
+     
 ## Noise Model Implementation
 
 #### `default_noise_model` Function
@@ -153,6 +154,19 @@ Once built, deployed, and launched, the container process invokes a Jupyter Note
 
 These functions enable realistic simulation of quantum circuits by incorporating various error models, enhancing the robustness of quantum algorithm development.
 
+## Fake Backend
+
+A fake backend with the `backend_id = "fake_guadalupe"` (a 16-qubit fake backend) is used as an example to execute benchmarks on fake backends within the Qiskit environment.
+
+To generate **memory usage plots (optional)**, firstly, pass an argument when calling the `plot_metrics` function in benchmark python files (.py). 
+`metrics.plot_metrics(f"Benchmark Results - {benchmark_name} - Qiskit", options = exec_options)`
+
+**Example:**
+```bash
+python _common/fake_backend/benchmark_runner.py --algorithm "amplitude-estimation" --min_qubits 3 --max_qubits 6 --max_circuits 3 --num_shots 1000 --backend_id "fake_guadalupe" --exec_options '{"plot_memory_usage": "True"}'
+```
+
+**Note:** Same command for qiskit (change folder name, backend_id and other parameters accordingly)
 
 ## Implementation Status
 

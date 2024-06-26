@@ -37,6 +37,7 @@ from datetime import datetime
 import traceback
 import matplotlib.cm as cm
 import copy
+import resource 
 
 # Raw and aggregate circuit metrics
 circuit_metrics = {  }
@@ -52,7 +53,7 @@ group_metrics = { "groups": [],
     "std_create_times": [], "std_elapsed_times": [], "std_exec_times": [],
     "std_fidelities": [], "std_hf_fidelities": [],    
     "avg_exec_creating_times": [], "avg_exec_validating_times": [], "avg_exec_running_times": [],
-    "job_ids": []
+    "job_ids": [], "max_memory_usage": [],
 }
 
 # Additional properties
@@ -63,6 +64,9 @@ start_time = 0
 end_time = 0
 
 ##### Options
+
+# print the total memory usage taken by qubit (True, to get the plot)
+plot_memory_usage = False
 
 # Print more detailed metrics info
 verbose = False
@@ -189,6 +193,8 @@ def init_metrics ():
     group_metrics["avg_exec_running_times"] = []
     
     group_metrics["job_ids"] = []
+
+    group_metrics["max_memory_usage"] = []
     
     # store the start of execution for the current app
     start_time = time.time()
@@ -351,6 +357,10 @@ def aggregate_metrics_for_group (group):
         avg, std = get_circuit_stats_for_metric(group, "exec_running_time", 3)
         if avg > 0:
             group_metrics["avg_exec_running_times"].append(avg)
+
+        # aggregate total memory used by each qubit
+        max_memory_usage = get_memory_usage()
+        group_metrics["max_memory_usage"].append(max_memory_usage)
  
         
 # Compute average and stddev for a metric in a given circuit group
@@ -434,14 +444,20 @@ def report_metrics_for_group (group):
             avg_fidelity = group_metrics["avg_fidelities"][group_index]
             avg_hf_fidelity = group_metrics["avg_hf_fidelities"][group_index]
             print(f"Average Hellinger, Normalized Fidelity for the {group} qubit group = {avg_hf_fidelity}, {avg_fidelity}")
-            
+
+            #maximum memory utilization
+            if plot_memory_usage:
+                max_memory_usage = group_metrics["max_memory_usage"][group_index]
+                print(f"Maximum Memory Utilized: {max_memory_usage} MB")  
+
             print("")
             return
             
     # if group metrics not found       
     print("")
     print(f"no metrics for group: {group}")
-        
+
+
 # Report all metrics for all groups
 def report_metrics ():   
     # loop over all groups and print metrics for that group
@@ -876,7 +892,7 @@ maxcut_style = os.path.join(dir_path,'maxcut.mplstyle')
     
 # Plot bar charts for each metric over all groups
 def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_group = False, new_qubit_group = None, filters=None, suffix="", options=None):
-    
+
     # get backend id for this set of circuits
     backend_id = get_backend_id()
     
@@ -912,7 +928,8 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
     do_hf_fidelities = False
     do_depths = True
     do_2qs = False
-    do_vbplot = True     
+    do_vbplot = True
+    do_memory_usage = False
     
     # check if we have depth metrics to show
     do_depths = len(group_metrics["avg_depths"]) > 0
@@ -933,7 +950,7 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
         if "depth" not in filters: do_depths = False
         if "2q" not in filters: do_2qs = False
         if "vbplot" not in filters: do_vbplot = False
-    
+
     # generate one-column figure with multiple bar charts, with shared X axis
     cols = 1
     fig_w = 6.0
@@ -944,7 +961,17 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
     if do_fidelities: numplots += 1
     if do_depths: numplots += 1
     if do_2qs: numplots += 1
+
+    # Convert 'True' or 'False' string values to boolean
+    plot_memory_usage = options.get('plot_memory_usage', 'False').lower() == 'true'
+    # print("plot_memory_usage", plot_memory_usage)  # Output: True
     
+    if plot_memory_usage:
+        do_memory_usage = True
+        numplots += 1
+    else: 
+        do_memory_usage = False
+        
     rows = numplots
     
     # DEVNOTE: this calculation is based on visual assessment of results and could be refined
@@ -1267,6 +1294,29 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
             
         axs[axi].legend(['Normalized 2Q Gates'], loc='upper left')
         axi += 1
+
+    if do_memory_usage:
+        # set ticks specially if we had non-unique group names
+        if xlabels is not None:
+            axs[axi].set_xticks(groups)
+            axs[axi].set_xticklabels(xlabels)
+        
+        axs[axi].grid(True, axis='y', color='silver', zorder=0)
+        bars = axs[axi].bar(groups, group_metrics["max_memory_usage"], zorder=3)
+        axs[axi].set_ylabel('Max Memory Usage (MB)')
+        
+        # Annotate bars with memory usage values
+        for bar, memory in zip(bars, group_metrics["max_memory_usage"]):
+            height = bar.get_height()
+            axs[axi].text(bar.get_x() + bar.get_width() / 2.0, height,
+                          f'{memory:.2f}', ha='center', va='bottom')
+        
+        if rows > 0 and not xaxis_set:
+            axs[axi].sharex(axs[rows-1])
+            xaxis_set = True
+            
+        plt.setp(axs[axi].get_xticklabels(), visible=True)
+        axi += 1
         
     # shared x axis label
     axs[rows - 1].set_xlabel('Circuit Width (Number of Qubits)')
@@ -1429,6 +1479,15 @@ def modify_elapsed_times(avg_elapsed_times, avg_exec_creating_times, avg_exec_ti
                 avg_elapsed_times[i] = avg_exec_times[i] * initial_elapsed_time_multiplier
     
     return avg_elapsed_times
+    
+#################################################
+
+# this function is used to get the memory required by a qubit to execute (in MB)  
+def get_memory_usage():
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    maximum_memory = usage.ru_maxrss/1024   # in MB 
+    max_memory_usage = group_metrics["max_memory_usage"].append(maximum_memory)
+    return max_memory_usage
     
 #################################################
 
@@ -3758,6 +3817,13 @@ def test_metrics ():
     store_metric('group1', 'circuit2', 'fidelity', 0.8)
     store_metric('group2', 'circuit1', 'fidelity', 0.9)
     store_metric('group2', 'circuit2', 'fidelity', 0.7)
+
+    store_metric('group1', 'circuit1', 'memory', 192.984375)
+    store_metric('group1', 'circuit2', 'memory', 198.234375)
+    store_metric('group2', 'circuit1', 'memory', 210.527343)
+    store_metric('group2', 'circuit2', 'memory', 210.566406)
+
+    
       
     aggregate_metrics()
     
