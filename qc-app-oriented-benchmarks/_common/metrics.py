@@ -358,7 +358,7 @@ def aggregate_metrics_for_group (group):
         if avg > 0:
             group_metrics["avg_exec_running_times"].append(avg)
 
-        # aggregate total memory used by each qubit
+        # aggregate memory used by each qubit
         max_memory_usage = get_memory_usage()
         group_metrics["max_memory_usage"].append(max_memory_usage)
  
@@ -962,16 +962,29 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
     if do_depths: numplots += 1
     if do_2qs: numplots += 1
 
-    # Convert 'True' or 'False' string values to boolean
-    plot_memory_usage = options.get('plot_memory_usage', 'False').lower() == 'true'
-    # print("plot_memory_usage", plot_memory_usage)  # Output: True
-    
     if plot_memory_usage:
+        print("Plotting memory usage metrics...")
         do_memory_usage = True
         numplots += 1
-    else: 
-        do_memory_usage = False
-        
+                
+    # Ensure options is a dictionary if provided
+    if options is None:
+        options = {}
+    
+    # Check if plot_memory_usage should be evaluated based on the presence of the options argument
+    elif options:
+        # Convert 'True' or 'False' string values to boolean
+        plot_memory_usage_option = options.get('plot_memory_usage', 'False').lower() == 'true'
+        print("Plot memory usage:", plot_memory_usage_option)  # Output: True or False
+
+        if plot_memory_usage_option:
+            print("Plotting memory usage metrics...")
+            do_memory_usage = True
+            numplots += 1
+            pass
+    else:
+        print("No options provided, skipping memory usage plot.")
+    
     rows = numplots
     
     # DEVNOTE: this calculation is based on visual assessment of results and could be refined
