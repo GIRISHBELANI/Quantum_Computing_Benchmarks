@@ -1,5 +1,5 @@
 """
-MaxCut Benchmark Program - Qiskit
+MaxCut Benchmark Program - Qiskit (fake_backend)
 """
 
 import datetime
@@ -19,8 +19,8 @@ from qiskit import (Aer, ClassicalRegister,  # for computing expectation tables
                     QuantumCircuit, QuantumRegister, execute, transpile)
 from qiskit.circuit import ParameterVector
 
-sys.path[1:1] = [ "_common", "_common/qiskit", "maxcut/_common" ]
-sys.path[1:1] = [ "../../_common", "../../_common/qiskit", "../../maxcut/_common/" ]
+sys.path[1:1] = [ "_common", "_common/fake_backend", "maxcut/_common" ]
+sys.path[1:1] = [ "../../_common", "../../_common/fake_backend", "../../maxcut/_common/" ]
 import common
 import execute as ex
 import metrics as metrics

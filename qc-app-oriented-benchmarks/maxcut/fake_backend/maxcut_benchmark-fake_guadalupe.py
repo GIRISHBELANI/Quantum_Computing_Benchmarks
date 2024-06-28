@@ -1,5 +1,5 @@
 """
-MaxCut Benchmark Program - Qiskit
+MaxCut Benchmark Program - Qiskit (fake_backend)
 """
 
 import datetime
