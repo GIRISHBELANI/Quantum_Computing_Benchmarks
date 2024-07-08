@@ -208,8 +208,8 @@ def default_noise_model():
     
     return noise
 
-noise = default_noise_model()  # for noisy simulation
-# noise = None                   # for noise-free simulation
+# noise = default_noise_model()  # for noisy simulation
+noise = None                   # for noise-free simulation
 
 
 ######################################################################
@@ -288,17 +288,34 @@ def set_execution_target(backend_id='qasm_simulator',
     elif backend_id == 'statevector_simulator':
         backend = Aer.get_backend("statevector_simulator")
         
-    # handle 'fake' backends here
+    # # handle 'fake' backends here
+    # elif 'fake' in backend_id:
+    #     backend = getattr(
+    #         importlib.import_module(
+    #             f'qiskit.providers.fake_provider.backends.{backend_id.split("_")[-1]}.{backend_id}'
+    #         ),
+    #         backend_id.title().replace('_', '')
+    #     )
+    #     backend = backend()
+    #     logger.info(f'Set {backend = }')
+    
+    # handle 'fake' backends here (including fake backend version-2)
     elif 'fake' in backend_id:
-        backend = getattr(
-            importlib.import_module(
-                f'qiskit.providers.fake_provider.backends.{backend_id.split("_")[-1]}.{backend_id}'
-            ),
-            backend_id.title().replace('_', '')
-        )
+        backend_class = f"{backend_id.title().replace('_', '')}"
+        
+        if 'v2' in backend_id:
+            backend_id = backend_id[:-3]
+            
+        try:
+            backend_module = importlib.import_module(f'qiskit.providers.fake_provider.backends.{backend_id.split("_")[-1]}.{backend_id}')           
+            backend = getattr(backend_module, backend_class)            
+        except ModuleNotFoundError:
+            backend_module = importlib.import_module(f'qiskit.providers.fake_provider.fake_pulse_backend')      
+            backend = getattr(fake_pulse_backend, f"Fake{backend_id.title().replace('_', '')}")
+
         backend = backend()
         logger.info(f'Set {backend = }')   
-
+    
     # otherwise use the given providername or backend_id to find the backend
     else:
     
@@ -474,7 +491,7 @@ def set_noise_model(noise_model=None):          # added depolarizing_error, rese
         noise = None
     else:
         # If noise_model is provided, set the global noise variable to the provided noise model
-        noise = noise_model
+        noise = NoiseModel()
 
         # Add depolarizing error to all single qubit gates with error rate 0.05%
         #                    and to all two qubit gates with error rate 0.5%
