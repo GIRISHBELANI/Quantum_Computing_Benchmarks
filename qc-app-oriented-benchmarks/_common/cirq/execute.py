@@ -182,20 +182,19 @@ def execute_circuit (batched_circuit):
     circuit = batched_circuit["qc"]
 
     # obtain initial circuit metrics
-    qc_depth, qc_size, qc_count_ops, qc_xi, qc_n2q = get_circuit_metrics(circuit)
+    qc_depth, qc_size, qc_count_ops = get_circuit_metrics(circuit)
 
     # default the normalized transpiled metrics to the same, in case exec fails
     qc_tr_depth = qc_depth
     qc_tr_size = qc_size
     qc_tr_count_ops = qc_count_ops
-    qc_tr_xi = qc_xi; 
-    qc_tr_n2q = qc_n2q
+
     #print(f"... before tp: {qc_depth} {qc_size} {qc_count_ops}")
 
     try:    
         # transpile the circuit to obtain size metrics using normalized basis
         if do_transpile_metrics and use_normalized_depth:
-            qc_tr_depth, qc_tr_size, qc_tr_count_ops, qc_tr_xi, qc_tr_n2q = transpile_for_metrics(circuit)
+            qc_tr_depth, qc_tr_size, qc_tr_count_ops = transpile_for_metrics(circuit)
             
             # we want to ignore elapsed time contribution of transpile for metrics (normalized depth)
             active_circuit["launch_time"] = time.time()
@@ -225,13 +224,9 @@ def execute_circuit (batched_circuit):
     # store circuit dimensional metrics
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'depth', qc_depth)
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'size', qc_size)
-    metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'xi', qc_xi)
-    metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'n2q', qc_n2q)
 
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'tr_depth', qc_tr_depth)
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'tr_size', qc_tr_size)
-    metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'tr_xi', qc_tr_xi)
-    metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'tr_n2q', qc_tr_n2q)
     
     # put job into the active circuits with circuit info
     active_circuits[job] = active_circuit
@@ -308,24 +303,8 @@ def get_circuit_metrics(qc):
     # print("Operation counts in the circuit:")
     # for gate, count in qc_count_ops.items():
     #     print(f"{gate}: {count}")
-
-    qc_xi = 0
-    qc_n2q = 0 
     
-    # iterate over the ordereddict to determine xi (ratio of 2 qubit gates to one qubit gates)
-    n1q = 0; n2q = 0
-    if qc_count_ops != None:
-        for key, value in qc_count_ops.items():
-            if key == "measure": continue
-            if key == "barrier": continue
-            if key.startswith("c") or key.startswith("mc"):
-                n2q += value
-            else:
-                n1q += value
-        qc_xi = n2q / (n1q + n2q)
-        qc_n2q = n2q
-    
-    return qc_depth, qc_size, qc_count_ops, qc_xi, qc_n2q
+    return qc_depth, qc_size, qc_count_ops
 
 #####################################################################
 
@@ -444,19 +423,8 @@ def transpile_for_metrics(qc):
     qc_tr_count_ops = count_ops(optimized_circuit)
     # print(f"*** after transpile: 'qc_tr_depth' {qc_tr_depth} 'qc_tr_size' {qc_tr_size} 'qc_tr_count_ops' {qc_tr_count_ops}\n")
     
-    # iterate over the ordereddict to determine xi (ratio of 2 qubit gates to one qubit gates)
-    n1q = 0; n2q = 0
-    if qc_tr_count_ops != None:
-        for key, value in qc_tr_count_ops.items():
-            if key == "measure": continue
-            if key == "barrier": continue
-            if key.startswith("c"): n2q += value
-            else: n1q += value
-        qc_tr_xi = n2q / (n1q + n2q) 
-        qc_tr_n2q = n2q   
-    #print(f"... qc_tr_xi = {qc_tr_xi} {n1q} {n2q}")
     
     logger.info(f'transpile_for_metrics - {round(time.time() - st, 5)} (ms)')
     if verbose_time: print(f"  *** transpile_for_metrics() time = {round(time.time() - st, 5)}")
     
-    return qc_tr_depth, qc_tr_size, qc_tr_count_ops, qc_tr_xi, qc_tr_n2q
+    return qc_tr_depth, qc_tr_size, qc_tr_count_ops
