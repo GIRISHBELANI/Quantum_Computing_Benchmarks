@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 ###########################
-# Execute Module - Qiskit
+# Execute Module - Braket
 #
 # This module provides a way to submit a series of circuits to be executed in a batch.
 # When the batch is executed, each circuit is launched as a 'job' to be executed on the target system.
@@ -26,11 +26,11 @@
 import time
 import copy
 import metrics
-import importlib
+# import importlib
 import os
 
 # AWS imports: Import Braket SDK modules
-from braket.aws import AwsDevice, AwsQuantumTask
+from braket.aws import AwsDevice
 from braket.devices import LocalSimulator
 
 # Enter the S3 bucket you created during onboarding in the environment variables queried here
@@ -42,7 +42,7 @@ s3_folder = (my_bucket, my_prefix)
 device = None
 
 # default noise model, can be overridden using set_noise_model
-#noise = NoiseModel()
+# noise = NoiseModel()
 noise = None
 
 # Initialize circuit execution module
@@ -53,7 +53,23 @@ batched_circuits = []
 active_circuits = {}
 result_handler = None
 
+# Print progress of execution
 verbose = False
+
+# Print additional time metrics for each stage of execution
+verbose_time = False
+
+
+import logging
+# logger for this module
+logger = logging.getLogger(__name__)
+
+# Option to compute normalized depth during execution (can disable to reduce overhead in large circuits)
+use_normalized_depth = True
+
+# Option to perform explicit transpile to collect depth metrics
+# (disabled after first circuit in iterative algorithms)
+do_transpile_metrics = True
 
 # Special object class to hold job information and used as a dict key
 class Job:
@@ -66,6 +82,8 @@ def init_execution(handler):
     active_circuits.clear()
     result_handler = handler
 
+    # On initialize, always set trnaspilation for metrics and execute to True
+    set_tranpilation_flags(do_transpile_metrics=True, do_transpile_for_execute=True)
 
 # Set the backend for execution
 def set_execution_target(backend_id='simulator'):
@@ -117,7 +135,7 @@ def submit_circuit(qc, group_id, circuit_id, shots=100):
     batched_circuits.append(
         { "qc": qc, "group": str(group_id), "circuit": str(circuit_id),
             "submit_time": time.time(), "shots": shots }
-    );
+    )
     # print("... submit circuit - ", str(batched_circuits[len(batched_circuits)-1]))
 
 
@@ -135,6 +153,50 @@ def execute_circuit(batched_circuit):
         
     # Initiate execution (currently, waits for completion)
     job = Job()
+    circuit = batched_circuit["qc"]
+
+    # print("batched_circuit ======\n", batched_circuit)
+    # print("circuit ======\n", circuit)
+
+    # obtain initial circuit metrics
+    qc_depth, qc_size, qc_count_ops = get_circuit_metrics(circuit)
+
+    # default the normalized transpiled metrics to the same, in case exec fails
+    qc_tr_depth = qc_depth
+    qc_tr_size = qc_size
+    qc_tr_count_ops = qc_count_ops
+    #print(f"... before tp: {qc_depth} {qc_size} {qc_count_ops}")
+
+    try:    
+        # transpile the circuit to obtain size metrics using normalized basis
+        if do_transpile_metrics and use_normalized_depth:
+            qc_tr_depth, qc_tr_size, qc_tr_count_ops = transpile_for_metrics(circuit)
+            
+            # we want to ignore elapsed time contribution of transpile for metrics (normalized depth)
+            active_circuit["launch_time"] = time.time()
+
+    except Exception as e:
+        print(f'ERROR: Failed to execute circuit {active_circuit["group"]} {active_circuit["circuit"]}')
+        print(f"... exception = {e}")
+        return
+
+    if type(noise) == str and noise == "DEFAULT":
+        # depolarizing noise on all qubits
+        circuit = circuit.with_noise(cirq.depolarize(0.05))
+    elif type(noise) == str and noise == "apply_noise_models":
+        circuit = apply_noise_models(circuit, noise_models_list)        
+    elif noise is not None:
+        # otherwise we expect it to be a NoiseModel
+        # see documentation at https://quantumai.google/cirq/noise
+        circuit = circuit.with_noise(noise)
+
+    # store circuit dimensional metrics
+    metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'depth', qc_depth)
+    metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'size', qc_size)
+
+    metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'tr_depth', qc_tr_depth)
+    metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'tr_size', qc_tr_size)
+    
     job.result = braket_execute(batched_circuit["qc"], batched_circuit["shots"])
     
     # put job into the active circuits with circuit info
@@ -223,7 +285,7 @@ def braket_execute(qc, shots=100):
     
     # immediate completion if Local Simulator
     if isinstance(device, LocalSimulator):
-        result = device.run(qc, shots).result()
+        result = device.run(qc, shots).result()        
         
     # returns task object if managed device
     else:
@@ -244,12 +306,12 @@ def braket_execute(qc, shots=100):
             
             if status == "FAILED":
                 result = None   
-                print(f"... circuit execution failed")
+                print("... circuit execution failed")
                 break
                 
             if status == "CANCELLED":
                 result = None   
-                print(f"... circuit execution cancelled")
+                print("... circuit execution cancelled")
                 break
             
             elif status == "COMPLETED":
@@ -277,3 +339,71 @@ def braket_execute(qc, shots=100):
 # Test circuit execution
 def test_execution():
     pass
+
+
+#########################################################
+
+# Get circuit metrics fom the circuit passed in
+def get_circuit_metrics(qc):
+
+    logger.info('Entering get_circuit_metrics')
+    # print(qc)
+    
+    # obtain initial circuit size metrics
+    qc_depth = qc.depth
+    qc_size = len(qc.instructions)    # total gate operations
+    qc_count_ops = count_operations(qc)
+
+    # print("Algorithmic Depth ===== ", qc_depth)
+    # print("Total no. of gate operations (including inside sub-circuit) ===== ", qc_size)
+    # print("qc_count_ops ===== ", qc_count_ops)
+
+    # Print the operation counts
+    # print("Operation counts in the circuit:")
+    # for gate, count in qc_count_ops.items():
+    #     print(f"{gate}: {count}")
+
+    return qc_depth, qc_size, qc_count_ops
+
+
+def count_operations(circuit):
+    operation_counts = {}
+
+    for instruction in circuit.instructions:
+        operation = instruction.operator.name
+        if operation in operation_counts:
+            operation_counts[operation] += 1
+        else:
+            operation_counts[operation] = 1
+
+    return operation_counts
+
+
+###############################
+# Set the state of the transpilation flags
+def set_tranpilation_flags(do_transpile_metrics = True, do_transpile_for_execute = True):
+    globals()['do_transpile_metrics'] = do_transpile_metrics
+    globals()['do_transpile_for_execute'] = do_transpile_for_execute
+
+###############################
+# Transpile the circuit to obtain normalized size metrics against a common basis gate set
+def transpile_for_metrics(qc):
+
+    logger.info('Entering transpile_for_metrics')
+    #print("*** Before transpile ...")
+    #print(qc)
+    st = time.time()
+
+    ###.....Need to FIX: circuit transpile/optimise/compile function require to get transpile depth..........###
+    
+    #kept Transpiled Depth and Algorithmic Depth same, to get the Volumetric Positioning Plot (temporary)
+    qc_tr_depth = qc.depth
+    qc_tr_size =len(qc.instructions)    # total gate operations 
+    qc_tr_count_ops = count_operations(qc)
+    # print(f"*** after transpile: 'qc_tr_depth' {qc_tr_depth} 'qc_tr_size' {qc_tr_size} 'qc_tr_count_ops' {qc_tr_count_ops}\n")
+    
+    
+    logger.info(f'transpile_for_metrics - {round(time.time() - st, 5)} (ms)')
+    if verbose_time: print(f"  *** transpile_for_metrics() time = {round(time.time() - st, 5)}")
+    
+    return qc_tr_depth, qc_tr_size, qc_tr_count_ops
