@@ -34,6 +34,9 @@ logger = logging.getLogger(__name__)
 import cirq
 backend = cirq.Simulator()      # Use Cirq Simulator by default
 
+from collections import OrderedDict
+from typing import Dict, List
+
 # Option to compute normalized depth during execution (can disable to reduce overhead in large circuits)
 use_normalized_depth = True
 
@@ -42,6 +45,7 @@ use_normalized_depth = True
 do_transpile_metrics = True
 
 # noise = 'DEFAULT'
+# noise = "apply_noise_models"   # to execute with list of noise models
 noise = None
 
 # Initialize circuit execution module
@@ -59,6 +63,24 @@ verbose = False
 
 # Print additional time metrics for each stage of execution
 verbose_time = False
+
+# Define noise models with correct parameters
+depolarizing_noise = cirq.depolarize(p=0.01)
+amplitude_damping_noise = cirq.amplitude_damp(gamma=0.01)
+phase_damping_noise = cirq.phase_damp(gamma=0.01)
+pauli_x_noise = cirq.bit_flip(p=0.01)
+pauli_z_noise = cirq.phase_flip(p=0.01)
+generalized_amplitude_damping_noise = cirq.generalized_amplitude_damp(p=0.01, gamma=0.02)
+
+# List of noise models
+noise_models_list = [
+    depolarizing_noise,
+    amplitude_damping_noise,
+    phase_damping_noise,
+    pauli_x_noise,
+    pauli_z_noise,
+    generalized_amplitude_damping_noise
+]
 
 # Special object class to hold job information and used as a dict key
 class Job:
@@ -110,13 +132,21 @@ def set_execution_target(backend_id='simulator', provider_backend=None):
     # create an informative device name
     device_name = backend_id
     metrics.set_plot_subtitle(f"Device = {device_name}")
+    
+##########################
 
-
+# Function to apply noise models to a circuit
+def apply_noise_models(circuit, noise_models):
+    for noise_model in noise_models:
+        circuit = circuit.with_noise(noise_model)
+    return circuit
+    
 def set_noise_model(noise_model = None):
     # see reference on NoiseModel here https://quantumai.google/cirq/noise
     global noise
     noise = noise_model
-    
+
+# set_noise_model(noise_model = "apply_noise_models")    # to execute with list of noise_models
 # set_noise_model(noise_model = "DEFAULT")   # to execute with DEFAULT noise
 set_noise_model(noise_model = None)   # for noise-free model
 
@@ -178,6 +208,8 @@ def execute_circuit (batched_circuit):
     if type(noise) == str and noise == "DEFAULT":
         # depolarizing noise on all qubits
         circuit = circuit.with_noise(cirq.depolarize(0.05))
+    elif type(noise) == str and noise == "apply_noise_models":
+        circuit = apply_noise_models(circuit, noise_models_list)        
     elif noise is not None:
         # otherwise we expect it to be a NoiseModel
         # see documentation at https://quantumai.google/cirq/noise
@@ -187,7 +219,7 @@ def execute_circuit (batched_circuit):
     if device != None:
         circuit.device=device
         device.validate_circuit(circuit)
-
+    
     job.result = backend.run(circuit, repetitions=shots)
 
     # store circuit dimensional metrics
@@ -296,9 +328,6 @@ def get_circuit_metrics(qc):
     return qc_depth, qc_size, qc_count_ops, qc_xi, qc_n2q
 
 #####################################################################
-from collections import OrderedDict
-from typing import Dict
-import cirq
 
 def count_ops(circuit: cirq.Circuit) -> OrderedDict[str, int]:
     """Count each operation kind in the circuit.
