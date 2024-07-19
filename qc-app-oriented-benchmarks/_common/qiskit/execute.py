@@ -684,7 +684,7 @@ def execute_circuit(circuit):
 
             #************************************************
             # Initiate execution (with noise if specified and this is a simulator backend)
-            if this_noise is not None and not use_sessions and (backend_name.endswith("qasm_simulator") or backend_name.endswith("statevector_simulator")): 
+            if (this_noise is not None and not use_sessions and backend_name.endswith("qasm_simulator")) or backend_name.endswith("statevector_simulator"): 
                 logger.info(f"Performing noisy simulation, shots = {shots}")
                 
                 # if the noise model has associated QV value, copy it to metrics module for plotting
@@ -715,15 +715,20 @@ def execute_circuit(circuit):
                 # no need for transpile above unless there are options like transformer
                 logger.info(f'Running circuit on noisy simulator, shots={shots}')
                 st = time.time()
-                
-                ''' some circuits, like Grover's behave incorrectly if we use run()
-                job = backend.run(simulation_circuits, shots=shots,
-                    noise_model=this_noise, basis_gates=this_noise.basis_gates,
-                    **backend_exec_options_copy)
-                '''   
-                job = execute(simulation_circuits, backend, shots=shots,
-                    noise_model=this_noise, basis_gates=this_noise.basis_gates,
-                    **backend_exec_options_copy)
+
+                if this_noise is None and not use_sessions and backend_name.endswith("statevector_simulator"):
+                    job = execute(simulation_circuits, backend, shots=shots,
+                        noise_model=this_noise, basis_gates=basis_gates_array[basis_selector],
+                        **backend_exec_options_copy)
+                else:
+                    ''' some circuits, like Grover's behave incorrectly if we use run()
+                    job = backend.run(simulation_circuits, shots=shots,
+                        noise_model=this_noise, basis_gates=this_noise.basis_gates,
+                        **backend_exec_options_copy)
+                    '''   
+                    job = execute(simulation_circuits, backend, shots=shots,
+                        noise_model=this_noise, basis_gates=this_noise.basis_gates,
+                        **backend_exec_options_copy)
                     
                 logger.info(f'Finished Running on noisy simulator - {round(time.time() - st, 5)} (ms)')
                 if verbose_time: print(f"  *** qiskit.execute() time = {round(time.time() - st, 5)}")
