@@ -360,7 +360,7 @@ MIN_STATE_QUBITS_M1 = 2
 MAX_QUBITS=16
 
 # Execute program with default parameters
-def run(min_qubits=MIN_QUBITS, max_qubits=16, skip_qubits=1, max_circuits=1, num_shots=1000,
+def run(min_qubits=MIN_QUBITS, max_qubits=14, skip_qubits=1, max_circuits=1, num_shots=1000,
         epsilon=0.05, degree=2, num_state_qubits=MIN_STATE_QUBITS, method = 2, # default, not exposed to users
         backend_id='fake_guadalupe', provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,

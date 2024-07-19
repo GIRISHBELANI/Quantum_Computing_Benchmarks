@@ -9,8 +9,8 @@ import time
 import numpy as np
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
-sys.path[1:1] = ["_common", "_common/fake_backend", "quantum-fourier-transform/qiskit"]
-sys.path[1:1] = ["../../_common", "../../_common/fake_backend", "../../quantum-fourier-transform/qiskit"]
+sys.path[1:1] = ["_common", "_common/qiskit", "quantum-fourier-transform/qiskit"]
+sys.path[1:1] = ["../../_common", "../../_common/qiskit", "../../quantum-fourier-transform/qiskit"]
 
 
 import execute as ex
@@ -229,7 +229,7 @@ def a_from_s_int(s_int, num_counting_qubits):
 MAX_QUBITS=20
 
 # Execute program with default parameters
-def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=1000,
+def run(min_qubits=3, max_qubits= 13, skip_qubits=1, max_circuits=3, num_shots=1000,
         num_state_qubits=1,                    # default, not exposed to users
         backend_id='fake_guadalupe',           # A fake 16 qubit backend 
         provider_backend=None,
@@ -331,7 +331,7 @@ def run(min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100
     print("\nInverse QFT Circuit ="); print(QFTI_ if QC_ != None else "  ... too large!")
 
     # Plot metrics for all circuit sizes
-    metrics.plot_metrics(f"Benchmark Results - {benchmark_name} - Qiskit")  # --exec_options '{"plot_memory_usage": "True"}' [pass from terminal to get the memory usage plot]
+    metrics.plot_metrics(f"Benchmark Results - {benchmark_name} - Qiskit") 
 
 
 # if main, execute method
