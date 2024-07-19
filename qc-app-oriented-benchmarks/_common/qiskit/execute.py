@@ -208,9 +208,8 @@ def default_noise_model():
     
     return noise
 
-# noise = default_noise_model()  # for noisy simulation
-noise = None                   # for noise-free simulation
-
+# noise = default_noise_model()    # for noisy simulation
+noise = None                     # for noise-free simulation
 
 ######################################################################
 # INITIALIZATION METHODS
@@ -535,7 +534,7 @@ def set_noise_model(noise_model=None):          # added depolarizing_error, rese
         # thermal_error = thermal_relaxation_error(relaxation_time_1, relaxation_time_2, gate_time, excited_state_population)
         # noise.add_all_qubit_quantum_error(thermal_error, ['rx', 'ry', 'h', 'p'])
         
-set_noise_model(noise_model=noise)            # to apply the custom noise model
+# set_noise_model(noise_model=noise)            # to apply the custom noise model
 
 # set flag to control use of sessions
 def set_use_sessions(val = False):
@@ -685,7 +684,7 @@ def execute_circuit(circuit):
 
             #************************************************
             # Initiate execution (with noise if specified and this is a simulator backend)
-            if this_noise is not None and not use_sessions and backend_name.endswith("qasm_simulator"):
+            if this_noise is not None and not use_sessions and (backend_name.endswith("qasm_simulator") or backend_name.endswith("statevector_simulator")): 
                 logger.info(f"Performing noisy simulation, shots = {shots}")
                 
                 # if the noise model has associated QV value, copy it to metrics module for plotting
@@ -881,6 +880,10 @@ def get_circuit_metrics(qc):
     qc_count_ops = qc.count_ops()
     qc_xi = 0
     qc_n2q = 0 
+
+    # print("qc_depth",  qc_depth)
+    # print("qc_size", qc_size)
+    # print("qc_count_ops", qc_count_ops)
     
     # iterate over the ordereddict to determine xi (ratio of 2 qubit gates to one qubit gates)
     n1q = 0; n2q = 0
