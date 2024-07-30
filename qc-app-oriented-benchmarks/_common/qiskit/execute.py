@@ -208,8 +208,8 @@ def default_noise_model():
     
     return noise
 
-# noise = default_noise_model()    # for noisy simulation
-noise = None                     # for noise-free simulation
+noise = default_noise_model()    # for noisy simulation
+# noise = None                     # for noise-free simulation
 
 ######################################################################
 # INITIALIZATION METHODS
@@ -535,6 +535,17 @@ def set_noise_model(noise_model=None):          # added depolarizing_error, rese
         # noise.add_all_qubit_quantum_error(thermal_error, ['rx', 'ry', 'h', 'p'])
         
 # set_noise_model(noise_model=noise)            # to apply the custom noise model
+
+def apply_noise_model(noise_type=None):
+    if noise_type is None:
+        set_noise_model(noise_model=None)                  # For noiseless simulation
+    elif noise_type == "default":
+        global noise
+        noise = default_noise_model()                      # Apply default noise model
+    elif noise_type == "append_more_noise_to_default":
+        set_noise_model(noise_model= default_noise_model())       # Set noise model to default and append more noise to the default noise
+    else:
+        raise ValueError("Invalid noise_type. Choose from None, 'default', or 'append_more_noise_to_default'.")
 
 # set flag to control use of sessions
 def set_use_sessions(val = False):
