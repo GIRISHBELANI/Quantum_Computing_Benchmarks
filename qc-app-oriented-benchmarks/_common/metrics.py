@@ -982,7 +982,7 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
     elif options:
         # Convert 'True' or 'False' string values to boolean
         plot_memory_usage_option = options.get('plot_memory_usage', 'False').lower() == 'true'
-        print("Plot memory usage:", plot_memory_usage_option)  # Output: True or False
+        # print("Plot memory usage:", plot_memory_usage_option)  # Output: True or False
 
         if plot_memory_usage_option:
             print("Plotting memory usage metrics...")
@@ -3889,3 +3889,88 @@ def test_metrics ():
     plot_metrics()
 
 #test_metrics()
+
+##############################################################
+### Function to create an Excel file from the JSON data:
+# import os
+# import json
+import pandas as pd
+from openpyxl.utils.dataframe import dataframe_to_rows
+
+def json_to_excel(benchmark_folder, api, backend_id):
+    # Replace slashes in the backend_id
+    backend_id = backend_id.replace("/", "_")
+
+    # Define the path to the __data directory
+    data_path = os.path.join(benchmark_folder, api, '__data')
+    
+    # Define the filename based on the backend_id
+    filename = f"DATA-{backend_id}.json"
+    file_path = os.path.join(data_path, filename)
+
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
+        return
+
+    # Load the JSON data
+    with open(file_path, 'r') as f:
+        try:
+            data = json.load(f)
+        except Exception as e:
+            print(f"Failed to load JSON data: {e}")
+            return
+
+    # Define the Excel filename
+    excel_filename = f"DATA-{benchmark_folder}-{api}-{backend_id}.xlsx"
+    writer = pd.ExcelWriter(excel_filename, engine='openpyxl')
+
+    # Process each app separately
+    for app, metrics in data.items():
+        # Create a DataFrame for the group_metrics
+        group_metrics = metrics.get('group_metrics', {})
+        
+        # Extract groups and check lengths
+        groups = group_metrics.get('groups', [])
+        lengths = {len(v) for k, v in group_metrics.items() if isinstance(v, list) and k != 'groups'}
+        if len(lengths) > 1:
+            print(f"Inconsistent lengths of lists in group_metrics for app {app}")
+            continue
+        length = lengths.pop() if lengths else 1
+        
+        # Flatten nested lists and create rows
+        rows = []
+        for i in range(len(groups)):
+            row = {'groups': groups[i]}
+            for key, value in group_metrics.items():
+                if isinstance(value, list):
+                    if isinstance(value[0], list):  # Check if it's a nested list
+                        row[key] = value[i][0] if i < len(value) else None
+                    else:
+                        row[key] = value[i] if i < len(value) else None
+                else:
+                    row[key] = value
+            rows.append(row)
+
+        df = pd.DataFrame(rows)
+        
+        # Access the writer's workbook to create a new sheet
+        workbook = writer.book
+        sheet = workbook.create_sheet(title=app)
+        
+        # Write the app name as a heading
+        sheet.append([app])
+        sheet.append([])  # Add an empty row
+
+        # Write the DataFrame to the worksheet
+        for r in dataframe_to_rows(df, index=False, header=True):
+            sheet.append(r)
+        
+        # Add another empty row for separation
+        sheet.append([])
+
+    # Save and close the workbook
+    writer.close()
+    print(f"Data successfully written to {excel_filename}")
+
+#######################################################################
