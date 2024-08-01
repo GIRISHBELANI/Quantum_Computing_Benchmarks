@@ -753,25 +753,28 @@ def polarization_fidelity(counts, correct_dist, thermal_dist=None):
     Polarization from: `https://arxiv.org/abs/2008.11294v1`
     """
     
-    # get length of random key in correct_dist to find how many qubits measured
+    # # get length of random key in correct_dist to find how many qubits measured
     # num_measured_qubits = len(list(correct_dist.keys())[0])
+    # print(num_measured_qubits)
     
     #above line is giving error "object of type 'numpy.float64' has no len()" while executing mc_validations.pynb below is the tried code for eliminating error
     # get keys from correct_dist
-    keys = correct_dist.keys()
+    keys = list(correct_dist.keys())[0]
 
-    # check if keys is a numpy array or a list
-    if isinstance(keys, list):
-       # keys is a list, use its length
-       num_measured_qubits = len(keys)
+    # check if keys is a numpy array or a list or a string
+    if isinstance(keys, str):
+        # keys is a list, use its length
+        num_measured_qubits = len(keys)
+    elif isinstance(keys, list):
+        # keys is a list, use its length
+        num_measured_qubits = len(keys)
     elif isinstance(keys, np.ndarray):
-       # keys is a numpy array, use its size
-       num_measured_qubits = keys.size
+        # keys is a numpy array, use its size
+        num_measured_qubits = keys.size
     else:
-       # keys is neither a list nor a numpy array, handle it accordingly
-       num_measured_qubits = 1  # default to 1 if keys is not iterable
+        # keys is neither a list nor a numpy array, handle it accordingly
+        num_measured_qubits = 1  # default to 1 if keys is not iterable
 
-    
     # ensure that all keys in counts are zero padded to this length
     
     counts = {str(k).zfill(num_measured_qubits): v for k, v in counts.items()}
@@ -3877,9 +3880,7 @@ def test_metrics ():
     store_metric('group1', 'circuit1', 'memory', 192.984375)
     store_metric('group1', 'circuit2', 'memory', 198.234375)
     store_metric('group2', 'circuit1', 'memory', 210.527343)
-    store_metric('group2', 'circuit2', 'memory', 210.566406)
-
-    
+    store_metric('group2', 'circuit2', 'memory', 210.566406) 
       
     aggregate_metrics()
     
@@ -3895,7 +3896,7 @@ def test_metrics ():
 # import os
 # import json
 import pandas as pd
-from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.utils.dataframe import dataframe_to_rows         # pip install openpyxl
 
 def json_to_excel(benchmark_folder, api, backend_id):
     # Replace slashes in the backend_id
