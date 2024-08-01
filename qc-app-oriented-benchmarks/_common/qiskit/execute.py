@@ -208,8 +208,41 @@ def default_noise_model():
     
     return noise
 
-noise = default_noise_model()    # for noisy simulation
-# noise = None                     # for noise-free simulation
+def custom_noise_model():
+    
+    from qiskit.providers.aer.noise import NoiseModel, amplitude_damping_error, phase_damping_error, kraus_error, thermal_relaxation_error
+    
+    # If noise_model is provided, set the global noise variable to the provided noise model
+    noise = NoiseModel()
+
+    # Example of setting amplitude damping error for single-qubit gates
+    one_qb_error = 0.005  # Modify this value as needed
+    noise.add_all_qubit_quantum_error(amplitude_damping_error(one_qb_error), ['rx', 'ry', 'rz'])
+
+    # Example of setting amplitude damping error for two-qubit gates (e.g., CX gate)
+    two_qb_error = 0.05  # Modify this value as needed
+    noise.add_all_qubit_quantum_error(amplitude_damping_error(two_qb_error).tensor(amplitude_damping_error(two_qb_error)), ['cx'])
+
+    # Example of setting phase damping error for single-qubit gates
+    phase_damping_param = 0.01  # Modify this value as needed
+    noise.add_all_qubit_quantum_error(phase_damping_error(phase_damping_param), ['u1', 'u2', 'u3'])
+
+    # Example of setting Kraus error
+    kraus_ops = [np.sqrt(0.9) * np.eye(2), np.sqrt(0.1) * np.array([[0, 1], [1, 0]])]  # Modify Kraus operators as needed
+    noise.add_all_qubit_quantum_error(kraus_error(kraus_ops), ['h', 'p'])
+
+    # Example of setting thermal relaxation error
+    relaxation_time_1 = 100  # T1 in microseconds, modify this value as needed
+    relaxation_time_2 = 200  # T2 in microseconds, modify this value as needed
+    gate_time = 50  # Gate time in microseconds, modify this value as needed
+    excited_state_population = 0.01  # Excited state population at equilibrium, modify as needed
+    thermal_error = thermal_relaxation_error(relaxation_time_1, relaxation_time_2, gate_time, excited_state_population)
+    noise.add_all_qubit_quantum_error(thermal_error, ['rx', 'ry', 'h', 'p'])
+
+    return noise
+
+# Global noise variable
+noise = None
 
 ######################################################################
 # INITIALIZATION METHODS
@@ -475,77 +508,26 @@ def set_noise_model(noise_model = None):
     noise = noise_model
 '''
 
-def set_noise_model(noise_model=None):          # added depolarizing_error, reset_error & ReadoutError, copied from default_noise_model() 
+def set_noise_model(noise_model=None): 
     """
     See reference on NoiseModel here https://qiskit.org/documentation/stubs/qiskit.providers.aer.noise.NoiseModel.html
 
     Need to pass in a qiskit noise model object, i.e. for amplitude_damping_error:
     """
-
-    from qiskit.providers.aer.noise import NoiseModel, amplitude_damping_error, phase_damping_error, kraus_error, thermal_relaxation_error
-
+    
     if noise_model is None:
         # If noise_model is None, reset the global noise variable to None
         global noise
         noise = None
+    elif noise_model == "default_noise_model":
+        noise = default_noise_model()
+    elif noise_model == "custom_noise_model":
+        noise = custom_noise_model()
     else:
-        # If noise_model is provided, set the global noise variable to the provided noise model
-        noise = NoiseModel()
+        raise ValueError("Invalid noise_type. Choose from None, 'default_noise_model', or 'custom_noise_model'.")
 
-        # Add depolarizing error to all single qubit gates with error rate 0.05%
-        #                    and to all two qubit gates with error rate 0.5%
-        depol_one_qb_error = 0.0005
-        depol_two_qb_error = 0.005
-        noise.add_all_qubit_quantum_error(depolarizing_error(depol_one_qb_error, 1), ['rx', 'ry', 'rz'])
-        noise.add_all_qubit_quantum_error(depolarizing_error(depol_two_qb_error, 2), ['cx'])
-    
-        # Add reset noise to all single qubit resets
-        reset_to_zero_error = 0.005
-        reset_to_one_error = 0.005
-        noise.add_all_qubit_quantum_error(reset_error(reset_to_zero_error, reset_to_one_error),["reset"])
-    
-        # Add readout error
-        p0given1_error = 0.000
-        p1given0_error = 0.000
-        error_meas = ReadoutError([[1 - p1given0_error, p1given0_error], [p0given1_error, 1 - p0given1_error]])
-        noise.add_all_qubit_readout_error(error_meas)
-
-        # Example of setting amplitude damping error for single-qubit gates
-        one_qb_error = 0.005  # Modify this value as needed
-        noise.add_all_qubit_quantum_error(amplitude_damping_error(one_qb_error), ['rx', 'ry', 'rz', 'u1', 'u2', 'u3'])
-
-        # Example of setting amplitude damping error for two-qubit gates (e.g., CX gate)
-        two_qb_error = 0.05  # Modify this value as needed
-        noise.add_all_qubit_quantum_error(amplitude_damping_error(two_qb_error).tensor(amplitude_damping_error(two_qb_error)), ['cx'])
-
-        # # Example of setting phase damping error for single-qubit gates
-        # phase_damping_param = 0.01  # Modify this value as needed
-        # noise.add_all_qubit_quantum_error(phase_damping_error(phase_damping_param), ['u1', 'u2', 'u3', 'rx', 'ry', 'rz'])
-
-        # # Example of setting Kraus error
-        # kraus_ops = [np.sqrt(0.9) * np.eye(2), np.sqrt(0.1) * np.array([[0, 1], [1, 0]])]  # Modify Kraus operators as needed
-        # noise.add_all_qubit_quantum_error(kraus_error(kraus_ops), ['u1', 'u2', 'u3', 'h', 'p'])
-
-        # # Example of setting thermal relaxation error
-        # relaxation_time_1 = 100  # T1 in microseconds, modify this value as needed
-        # relaxation_time_2 = 200  # T2 in microseconds, modify this value as needed
-        # gate_time = 50  # Gate time in microseconds, modify this value as needed
-        # excited_state_population = 0.01  # Excited state population at equilibrium, modify as needed
-        # thermal_error = thermal_relaxation_error(relaxation_time_1, relaxation_time_2, gate_time, excited_state_population)
-        # noise.add_all_qubit_quantum_error(thermal_error, ['rx', 'ry', 'h', 'p'])
-        
-# set_noise_model(noise_model=noise)            # to apply the custom noise model
-
-def apply_noise_model(noise_type=None):
-    if noise_type is None:
-        set_noise_model(noise_model=None)                  # For noiseless simulation
-    elif noise_type == "default":
-        global noise
-        noise = default_noise_model()                      # Apply default noise model
-    elif noise_type == "append_more_noise_to_default":
-        set_noise_model(noise_model= default_noise_model())       # Set noise model to default and append more noise to the default noise
-    else:
-        raise ValueError("Invalid noise_type. Choose from None, 'default', or 'append_more_noise_to_default'.")
+# noise_model can be None, "default_noise_model", "custom_noise_model"
+# set_noise_model(noise_model= "custom_noise_model")            # to apply the custom noise model
 
 # set flag to control use of sessions
 def set_use_sessions(val = False):
