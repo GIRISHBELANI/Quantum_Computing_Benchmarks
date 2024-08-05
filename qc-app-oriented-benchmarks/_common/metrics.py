@@ -2932,7 +2932,7 @@ def store_app_metrics (backend_id, circuit_metrics, group_metrics, app, start_ti
     if not os.path.exists('__data'): os.makedirs('__data')
     
     # create filename based on the backend_id and optional data_suffix
-    filename = f"__data/DATA-{backend_id}{data_suffix}.json"
+    filename = f"__data/DATA-{app}-{backend_id}{data_suffix}.json"
     
     # overwrite the existing file with the merged data
     with open(filename, 'w+') as f:
@@ -2968,7 +2968,7 @@ def load_app_metrics (api, backend_id):
     
     # temporary: to read older format files ...     
     for app in shared_data:
-        #print(app)
+        # print(app)
         
         # this is very old and could potentially be removed (but would need testing)
         if "group_metrics" not in shared_data[app]:
@@ -3892,7 +3892,7 @@ def test_metrics ():
 #test_metrics()
 
 ##############################################################
-### Function to create an Excel file from the JSON data:
+### Function to create an Excel file from the JSON data (able to take multiple JSON files of same backend_id and create seperate sheets):
 # import os
 # import json
 import pandas as pd
@@ -3904,71 +3904,72 @@ def json_to_excel(benchmark_folder, api, backend_id):
 
     # Define the path to the __data directory
     data_path = os.path.join(benchmark_folder, api, '__data')
-    
-    # Define the filename based on the backend_id
-    filename = f"DATA-{backend_id}.json"
-    file_path = os.path.join(data_path, filename)
 
-    # Check if the file exists
-    if not os.path.exists(file_path):
-        print(f"File {file_path} does not exist.")
+    # Get a list of all JSON files in the directory that match the backend_id pattern
+    file_pattern = f"DATA-*-{backend_id}.json"
+    files = [f for f in os.listdir(data_path) if f.endswith('.json') and backend_id in f]
+
+    if not files:
+        print(f"No files found matching the pattern {file_pattern}")
         return
-
-    # Load the JSON data
-    with open(file_path, 'r') as f:
-        try:
-            data = json.load(f)
-        except Exception as e:
-            print(f"Failed to load JSON data: {e}")
-            return
 
     # Define the Excel filename
     excel_filename = f"DATA-{benchmark_folder}-{api}-{backend_id}.xlsx"
     writer = pd.ExcelWriter(excel_filename, engine='openpyxl')
+    
+    # Load each JSON file and combine data
+    for file in files:
+        file_path = os.path.join(data_path, file)
+        with open(file_path, 'r') as f:
+            try:
+                data = json.load(f)
+            except Exception as e:
+                print(f"Failed to load JSON data from {file}: {e}")
+                continue
 
-    # Process each app separately
-    for app, metrics in data.items():
-        # Create a DataFrame for the group_metrics
-        group_metrics = metrics.get('group_metrics', {})
-        
-        # Extract groups and check lengths
-        groups = group_metrics.get('groups', [])
-        lengths = {len(v) for k, v in group_metrics.items() if isinstance(v, list) and k != 'groups'}
-        if len(lengths) > 1:
-            print(f"Inconsistent lengths of lists in group_metrics for app {app}")
-            continue
-        length = lengths.pop() if lengths else 1
-        
-        # Flatten nested lists and create rows
-        rows = []
-        for i in range(len(groups)):
-            row = {'groups': groups[i]}
-            for key, value in group_metrics.items():
-                if isinstance(value, list):
-                    if isinstance(value[0], list):  # Check if it's a nested list
-                        row[key] = value[i][0] if i < len(value) else None
+        for app, metrics in data.items():
+            
+            # Create a DataFrame for the group_metrics
+            group_metrics = metrics.get('group_metrics', {})
+            
+            # Extract groups and check lengths
+            groups = group_metrics.get('groups', [])
+            lengths = {len(v) for k, v in group_metrics.items() if isinstance(v, list) and k != 'groups'}
+            if len(lengths) > 1:
+                print(f"Inconsistent lengths of lists in group_metrics for app {app}")
+                continue
+            length = lengths.pop() if lengths else 1
+            
+            # Flatten nested lists and create rows
+            rows = []
+            for i in range(len(groups)):
+                row = {'groups': groups[i]}
+                for key, value in group_metrics.items():
+                    if isinstance(value, list):
+                        if isinstance(value[0], list):  # Check if it's a nested list
+                            row[key] = value[i][0] if i < len(value) else None
+                        else:
+                            row[key] = value[i] if i < len(value) else None
                     else:
-                        row[key] = value[i] if i < len(value) else None
-                else:
-                    row[key] = value
-            rows.append(row)
+                        row[key] = value
+                rows.append(row)
 
-        df = pd.DataFrame(rows)
-        
-        # Access the writer's workbook to create a new sheet
-        workbook = writer.book
-        sheet = workbook.create_sheet(title=app)
-        
-        # Write the app name as a heading
-        sheet.append([app])
-        sheet.append([])  # Add an empty row
-
-        # Write the DataFrame to the worksheet
-        for r in dataframe_to_rows(df, index=False, header=True):
-            sheet.append(r)
-        
-        # Add another empty row for separation
-        sheet.append([])
+            df = pd.DataFrame(rows)
+            
+            # Access the writer's workbook to create a new sheet
+            workbook = writer.book
+            sheet = workbook.create_sheet(title=app)
+            
+            # Write the app name as a heading
+            sheet.append([app])
+            sheet.append([])  # Add an empty row
+    
+            # Write the DataFrame to the worksheet
+            for r in dataframe_to_rows(df, index=False, header=True):
+                sheet.append(r)
+            
+            # Add another empty row for separation
+            sheet.append([])
 
     # Save and close the workbook
     writer.close()
