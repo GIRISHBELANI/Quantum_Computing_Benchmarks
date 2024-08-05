@@ -27,7 +27,7 @@ If everything is working correctly, the `Location` field should have your newly 
 
 Enter the following commands to install the latest version of Amazon Braket SDK and the other required packages.
 
-    pip install matplotlib boto3 amazon-braket-sdk notebook
+    pip install matplotlib pandas openpyxl boto3 amazon-braket-sdk notebook
 
 You are now ready to run the benchmark programs.
 By default, all benchmark programs are configured to run on a simulator that is provided within the target environment.

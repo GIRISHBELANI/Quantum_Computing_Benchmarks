@@ -27,7 +27,7 @@ If everything is working correctly, the `Location` field should have your newly 
 
 Enter the following commands to install the latest version of Cirq and other required packages.
 
-    pip install scipy cirq notebook
+    pip install pandas openpyxl scipy cirq notebook
 
 You are now ready to run the benchmark programs.
 
