@@ -32,8 +32,8 @@
 import os
 import json
 import time
-from time import gmtime, strftime
-from datetime import datetime
+from time import gmtime, strftime, localtime
+from datetime import datetime, timedelta
 import traceback
 import matplotlib.cm as cm
 import copy
@@ -132,12 +132,14 @@ depth_base = 2
 # suppress plotting for low fidelity at this level
 suppress_low_fidelity_level = 0.015
 
-# Get the current time formatted
+# annotate bars
+annotate_bars = False
+
+# Get the current time formatted in UTC
 def get_timestr():
     #timestr = strftime("%Y-%m-%d %H:%M:%S UTC", gmtime())
     timestr = strftime("%b %d, %Y %H:%M:%S UTC", gmtime())
     return timestr
-
 
 ######################################################################
 
@@ -895,7 +897,17 @@ import matplotlib.pyplot as plt
 dir_path = os.path.dirname(os.path.realpath(__file__))
 maxcut_style = os.path.join(dir_path,'maxcut.mplstyle')
 # plt.style.use(style_file)
-    
+
+def autolabel(rects, ax, str='{:.3f}', text_color="black", ha='center', va='bottom'):
+    for rect in rects:
+        height = rect.get_height()
+        ax.annotate(str.format(height),  # Formatting to two decimal places
+                    xy=(rect.get_x() + rect.get_width() / 2, height),
+                    xytext=(0,3),
+                    textcoords="offset points",
+                    ha=ha, va=va, color=text_color, rotation=90)
+
+
 # Plot bar charts for each metric over all groups
 def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_group = False, new_qubit_group = None, filters=None, suffix="", options=None):
 
@@ -1090,9 +1102,13 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
         if max(group_metrics["avg_create_times"]) < 0.01:
             axs[axi].set_ylim([0, 0.01])
         axs[axi].grid(True, axis = 'y', color='silver', zorder = 0)
-        axs[axi].bar(groups, group_metrics["avg_create_times"], zorder = 3)
+        bars = axs[axi].bar(groups, group_metrics["avg_create_times"], zorder = 3)
         axs[axi].set_ylabel('Avg Creation Time (sec)')
-        
+
+        if annotate_bars:
+            # Annotate bars 
+            autolabel(bars, axs[axi])
+    
         # error bars
         zeros = [0] * len(group_metrics["avg_create_times"])
         std_create_times = group_metrics["std_create_times"] if "std_create_times" in group_metrics else zeros
@@ -1131,7 +1147,9 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
         axs[axi].grid(True, axis = 'y', color='silver', zorder = 0)
         
         if show_elapsed_times:    # a global setting
-            axs[axi].bar(groups, avg_elapsed_times, 0.75, color='skyblue', alpha = 0.8, zorder = 3)
+            elapsed_bars =axs[axi].bar(groups, avg_elapsed_times, 0.75, color='skyblue', alpha = 0.8, zorder = 3)
+            if annotate_bars:
+                autolabel(elapsed_bars, axs[axi], ha='right')  # Annotate elapsed times bars
             
             if max(avg_elapsed_times) < 0.1 and max(avg_exec_times) < 0.1:
                 axs[axi].set_ylim([0, 0.1])
@@ -1139,7 +1157,9 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
             if max(avg_exec_times) < 0.1:
                 axs[axi].set_ylim([0, 0.1])
             
-        axs[axi].bar(groups, avg_exec_times, 0.55 if show_elapsed_times is True else 0.7, zorder = 3)
+        exec_bars = axs[axi].bar(groups, avg_exec_times, 0.55 if show_elapsed_times is True else 0.7, zorder = 3)
+        if annotate_bars:
+            autolabel(exec_bars, axs[axi], ha='left')  # Annotate execution times bars
         axs[axi].set_ylabel('Avg Execution Time (sec)')
         
         # error bars
@@ -1253,8 +1273,13 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
             axs[axi].set_xticklabels(xlabels)
             
         # data bars
-        axs[axi].bar(groups, avg_hf_fidelities, color='skyblue', alpha = 0.8, zorder = 3)
-        axs[axi].bar(groups, avg_fidelities, 0.55, zorder = 3) 
+        avg_hf_fidelities_bars = axs[axi].bar(groups, avg_hf_fidelities, color='skyblue', alpha = 0.8, zorder = 3)
+        avg_fidelities_bars = axs[axi].bar(groups, avg_fidelities, 0.55, zorder = 3) 
+
+        if annotate_bars:
+            # Annotate bars 
+            autolabel(avg_hf_fidelities_bars, axs[axi], ha='right')
+            autolabel(avg_fidelities_bars, axs[axi], ha='left')
         
         # error bars
         axs[axi].errorbar(groups, avg_fidelities, yerr=std_fidelities,
@@ -1290,8 +1315,8 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
             if max(group_metrics["avg_tr_depths"]) < 20:
                 axs[axi].set_ylim([0, 20])  
             axs[axi].grid(True, axis = 'y', color='silver', zorder = 0)
-            axs[axi].bar(groups, group_metrics["avg_depths"], 0.8, zorder = 3)
-            axs[axi].bar(groups, group_metrics["avg_tr_depths"], 0.5, color='C9', zorder = 3) 
+            avg_depths_bars = axs[axi].bar(groups, group_metrics["avg_depths"], 0.8, zorder = 3)
+            avg_tr_depths_bars = axs[axi].bar(groups, group_metrics["avg_tr_depths"], 0.5, color='C9', zorder = 3) 
             axs[axi].set_ylabel('Circuit Depth')      
 
         # using two axes for circuit depth
@@ -1311,12 +1336,12 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
             axs[axi].grid(True, axis = 'y', color='silver', zorder = 0)
             axs[axi].set_ylabel('Algorithmic Circuit Depth')
 
-            axs[axi].bar(groups, group_metrics["avg_depths"], 0.8, zorder = 3)
+            avg_depths_bars = axs[axi].bar(groups, group_metrics["avg_depths"], 0.8, zorder = 3)
 
             # use width = 0 to make it invisible
             yy0 = [0.0 for y in group_metrics["avg_tr_depths"]]
-            axs[axi].bar(groups, yy0, 0.0, color='C9', zorder = 3) 
-            #axs[axi].bar(groups, group_metrics["avg_tr_depths"], 0.0, color='C9', zorder = 3)
+            avg_tr_depths_bars = axs[axi].bar(groups, yy0, 0.0, color='C9', zorder = 3) 
+            #avg_tr_depths_bars = axs[axi].bar(groups, group_metrics["avg_tr_depths"], 0.0, color='C9', zorder = 3)
 
             # plot normalized on second axis
             if max(group_metrics["avg_tr_depths"]) < 20:
@@ -1325,8 +1350,15 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
             ax2.grid(True, axis = 'y', color='silver', ls='dashed', zorder = 0)
             ax2.set_ylabel('Normalized Circuit Depth')
 
-            ax2.bar(groups, group_metrics["avg_tr_depths"], 0.45, color='C9', zorder = 3)
-        
+            avg_tr_depths_bars2 = ax2.bar(groups, group_metrics["avg_tr_depths"], 0.45, color='C9', zorder = 3)
+            if annotate_bars:
+                autolabel(avg_tr_depths_bars2, ax2)
+            
+        if annotate_bars:
+            # Annotate bars 
+            autolabel(avg_depths_bars, axs[axi], ha='right')
+            autolabel(avg_tr_depths_bars, axs[axi], ha='left')
+            
         if rows > 0 and not xaxis_set:
             axs[axi].sharex(axs[rows-1])
             xaxis_set = True
@@ -1364,12 +1396,25 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
         bars = axs[axi].bar(groups, group_metrics["max_memory_usage"], zorder=3)
         axs[axi].set_ylabel('Max Memory Usage (MB)')
         
-        # Annotate bars with memory usage values
+        # # Annotate bars with memory usage values
+        # for bar, memory in zip(bars, group_metrics["max_memory_usage"]):
+        #     height = bar.get_height()
+        #     axs[axi].text(bar.get_x() + bar.get_width() / 2.0, height,
+        #                   f'{memory:.2f}', ha='center', va='bottom')
+        
+        # Annotate bars with memory usage values inside the bars and vertically
         for bar, memory in zip(bars, group_metrics["max_memory_usage"]):
             height = bar.get_height()
-            axs[axi].text(bar.get_x() + bar.get_width() / 2.0, height,
-                          f'{memory:.2f}', ha='center', va='bottom')
-        
+            axs[axi].text(
+                bar.get_x() + bar.get_width() / 2.0,  # X position
+                height / 2.0,  # Y position, adjusted to be inside the bar
+                f'{memory:.2f}',  # Text to display
+                ha='center',  # Horizontal alignment
+                va='center',  # Vertical alignment
+                rotation='vertical',  # Rotate text to be vertical
+                color='white'  # Color of the text (white for better visibility)
+            )
+ 
         if rows > 0 and not xaxis_set:
             axs[axi].sharex(axs[rows-1])
             xaxis_set = True
@@ -2932,7 +2977,7 @@ def store_app_metrics (backend_id, circuit_metrics, group_metrics, app, start_ti
     if not os.path.exists('__data'): os.makedirs('__data')
     
     # create filename based on the backend_id and optional data_suffix
-    filename = f"__data/DATA-{app}-{backend_id}{data_suffix}.json"
+    filename = f"__data/DATA-{backend_id}{data_suffix}.json"
     
     # overwrite the existing file with the merged data
     with open(filename, 'w+') as f:
@@ -3892,7 +3937,7 @@ def test_metrics ():
 #test_metrics()
 
 ##############################################################
-### Function to create an Excel file from the JSON data (able to take multiple JSON files of same backend_id and create seperate sheets):
+### Function to create an Excel file from the JSON data:
 # import os
 # import json
 import pandas as pd
@@ -3905,71 +3950,70 @@ def json_to_excel(benchmark_folder, api, backend_id):
     # Define the path to the __data directory
     data_path = os.path.join(benchmark_folder, api, '__data')
 
-    # Get a list of all JSON files in the directory that match the backend_id pattern
-    file_pattern = f"DATA-*-{backend_id}.json"
-    files = [f for f in os.listdir(data_path) if f.endswith('.json') and backend_id in f]
+    # Define the filename based on the backend_id
+    filename = f"DATA-{backend_id}.json"
+    file_path = os.path.join(data_path, filename)
 
-    if not files:
-        print(f"No files found matching the pattern {file_pattern}")
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"File {file_path} does not exist.")
         return
+
+    # Load the JSON data
+    with open(file_path, 'r') as f:
+        try:
+            data = json.load(f)
+        except Exception as e:
+            print(f"Failed to load JSON data: {e}")
+            return
 
     # Define the Excel filename
     excel_filename = f"DATA-{benchmark_folder}-{api}-{backend_id}.xlsx"
     writer = pd.ExcelWriter(excel_filename, engine='openpyxl')
-    
-    # Load each JSON file and combine data
-    for file in files:
-        file_path = os.path.join(data_path, file)
-        with open(file_path, 'r') as f:
-            try:
-                data = json.load(f)
-            except Exception as e:
-                print(f"Failed to load JSON data from {file}: {e}")
-                continue
 
-        for app, metrics in data.items():
-            
-            # Create a DataFrame for the group_metrics
-            group_metrics = metrics.get('group_metrics', {})
-            
-            # Extract groups and check lengths
-            groups = group_metrics.get('groups', [])
-            lengths = {len(v) for k, v in group_metrics.items() if isinstance(v, list) and k != 'groups'}
-            if len(lengths) > 1:
-                print(f"Inconsistent lengths of lists in group_metrics for app {app}")
-                continue
-            length = lengths.pop() if lengths else 1
-            
-            # Flatten nested lists and create rows
-            rows = []
-            for i in range(len(groups)):
-                row = {'groups': groups[i]}
-                for key, value in group_metrics.items():
-                    if isinstance(value, list):
-                        if isinstance(value[0], list):  # Check if it's a nested list
-                            row[key] = value[i][0] if i < len(value) else None
-                        else:
-                            row[key] = value[i] if i < len(value) else None
+    # Process each app separately
+    for app, metrics in data.items():
+        # Create a DataFrame for the group_metrics
+        group_metrics = metrics.get('group_metrics', {})
+
+        # Extract groups and check lengths
+        groups = group_metrics.get('groups', [])
+        lengths = {len(v) for k, v in group_metrics.items() if isinstance(v, list) and k != 'groups'}
+        if len(lengths) > 1:
+            print(f"Inconsistent lengths of lists in group_metrics for app {app}")
+            continue
+        length = lengths.pop() if lengths else 1
+
+        # Flatten nested lists and create rows
+        rows = []
+        for i in range(len(groups)):
+            row = {'groups': groups[i]}
+            for key, value in group_metrics.items():
+                if isinstance(value, list):
+                    if isinstance(value[0], list):  # Check if it's a nested list
+                        row[key] = value[i][0] if i < len(value) else None
                     else:
-                        row[key] = value
-                rows.append(row)
+                        row[key] = value[i] if i < len(value) else None
+                else:
+                    row[key] = value
+            rows.append(row)
 
-            df = pd.DataFrame(rows)
-            
-            # Access the writer's workbook to create a new sheet
-            workbook = writer.book
-            sheet = workbook.create_sheet(title=app)
-            
-            # Write the app name as a heading
-            sheet.append([app])
-            sheet.append([])  # Add an empty row
-    
-            # Write the DataFrame to the worksheet
-            for r in dataframe_to_rows(df, index=False, header=True):
-                sheet.append(r)
-            
-            # Add another empty row for separation
-            sheet.append([])
+        df = pd.DataFrame(rows)
+
+        # Access the writer's workbook to create a new sheet
+        workbook = writer.book
+        sheet = workbook.create_sheet(title=app)
+
+        # Write the app name as a heading
+        sheet.append([app])
+        sheet.append([])  # Add an empty row
+
+        # Write the DataFrame to the worksheet
+        for r in dataframe_to_rows(df, index=False, header=True):
+            sheet.append(r)
+
+        # Add another empty row for separation
+        sheet.append([])
 
     # Save and close the workbook
     writer.close()
