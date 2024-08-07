@@ -140,6 +140,18 @@ def get_timestr():
     #timestr = strftime("%Y-%m-%d %H:%M:%S UTC", gmtime())
     timestr = strftime("%b %d, %Y %H:%M:%S UTC", gmtime())
     return timestr
+ 
+# Get the current time formatted in IST
+# def get_timestr():
+#     # Get the current UTC time
+#     utc_now = datetime.utcnow()
+    
+#     # Convert UTC time to IST
+#     ist_now = utc_now + timedelta(hours=5, minutes=30)
+    
+#     # Format the IST time string
+#     timestr = ist_now.strftime("%b %d, %Y %H:%M:%S IST")
+#     return timestr
 
 ######################################################################
 
