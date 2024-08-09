@@ -15,8 +15,7 @@ from collections import namedtuple
 import numpy as np
 from scipy.optimize import minimize
 
-from qiskit import (Aer, ClassicalRegister,  # for computing expectation tables
-                    QuantumCircuit, QuantumRegister, execute, transpile)
+from qiskit import (Aer, QuantumCircuit, execute)
 from qiskit.circuit import ParameterVector
 
 sys.path[1:1] = [ "_common", "_common/fake_backend", "maxcut/_common" ]

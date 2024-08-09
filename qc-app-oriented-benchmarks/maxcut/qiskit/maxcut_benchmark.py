@@ -15,8 +15,7 @@ from collections import namedtuple
 import numpy as np
 from scipy.optimize import minimize
 
-from qiskit import (Aer, ClassicalRegister,  # for computing expectation tables
-                    QuantumCircuit, QuantumRegister, execute, transpile)
+from qiskit import (Aer, QuantumCircuit, execute)
 from qiskit.circuit import ParameterVector
 
 sys.path[1:1] = [ "_common", "_common/qiskit", "maxcut/_common" ]
@@ -906,7 +905,7 @@ saved_result = {  }
 instance_filename = None
 
 def run (min_qubits=3, max_qubits=6, skip_qubits=2,
-        max_circuits=1, num_shots=100,
+        max_circuits=1, num_shots=1000,
         method=1, rounds=1, degree=3, alpha=0.1, thetas_array=None, parameterized= False, do_fidelities=True,
         max_iter=30, score_metric='fidelity', x_metric='cumulative_exec_time', y_metric='num_qubits',
         fixed_metrics={}, num_x_bins=15, y_size=None, x_size=None, use_fixed_angles=False,
@@ -1138,7 +1137,7 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=2,
         
         # if the file does not exist, we are done with this number of qubits
         if nodes == None:
-            print(f"  ... problem not found.")
+            print("  ... problem not found.")
             break
         
         for restart_ind in range(1, max_circuits + 1):
@@ -1177,7 +1176,7 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=2,
                 # Always start by enabling transpile ...
                 ex.set_tranpilation_flags(do_transpile_metrics=True, do_transpile_for_execute=True)
                     
-                logger.info(f'===============  Begin method 2 loop, enabling transpile')
+                logger.info('===============  Begin method 2 loop, enabling transpile')
                 
                 def expectation(thetas_array):
                     
@@ -1217,7 +1216,7 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=2,
                     # after first execution and thereafter, no need for transpilation if parameterized
                     if parameterized:
                         ex.set_tranpilation_flags(do_transpile_metrics=False, do_transpile_for_execute=False)
-                        logger.info(f'**** First execution complete, disabling transpile')
+                        logger.info('**** First execution complete, disabling transpile')
                     #************************************************
                     
                     global saved_result
@@ -1339,7 +1338,7 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=2,
 
 # ******************************
 
-def plot_results_from_data(num_shots=100, rounds=1, degree=3, max_iter=30, max_circuits = 1,
+def plot_results_from_data(num_shots=1000, rounds=1, degree=3, max_iter=30, max_circuits = 1,
             objective_func_type='approx_ratio', method=2, use_fixed_angles=False,
             score_metric='fidelity', x_metric='cumulative_exec_time', y_metric='num_qubits', fixed_metrics={},
             num_x_bins=15, y_size=None, x_size=None, x_min=None, x_max=None,
