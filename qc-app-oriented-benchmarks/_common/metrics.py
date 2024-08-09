@@ -3570,7 +3570,8 @@ def plot_volumetric_background_aq(max_qubits=11, AQ=12, depth_base=2, suptitle=N
                 bbox=dict(boxstyle="square,pad=0.3", fc=(.9,.9,.9), ec="grey", lw=1))
                 
     # add colorbar to right of plot
-    plt.colorbar(cm.ScalarMappable(cmap=cmap), cax=None, ax=ax, shrink=0.6, label=colorbar_label, panchor=(0.0, 0.7))
+    plt.colorbar(cm.ScalarMappable(cmap=cmap), cax=None, ax=ax,
+                shrink=0.6, label=colorbar_label, panchor=(0.0, 0.7))
             
     return ax
 
@@ -3651,7 +3652,8 @@ def plot_metrics_background(suptitle, ylabel, x_label, score_label,
 
 
     # add colorbar to right of plot (scale if normalize function installed)    
-    cbar = plt.colorbar(cm.ScalarMappable(cmap=cmap, norm=cmap_norm), cax=None, ax=ax, shrink=0.6, label=score_label, panchor=(0.0, 0.7))
+    cbar = plt.colorbar(cm.ScalarMappable(cmap=cmap, norm=cmap_norm), cax=None, ax=ax,
+            shrink=0.6, label=score_label, panchor=(0.0, 0.7))
     if score_label == 'Accuracy Volume':
         cbar.ax.invert_yaxis()
         
