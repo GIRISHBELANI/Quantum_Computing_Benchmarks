@@ -40,7 +40,12 @@ def constant_oracle (input_size):
 def balanced_oracle (input_size):
     qc = Circuit()
 
-    b_str = "10101010101010101010"              # permit input_string up to 20 chars
+    # permit input_string up to num_qubits chars
+    # e.g. b_str = "10101010101010101010"
+    b_str = ""
+    for i in range(input_size): b_str += '1' if i % 2 == 0 else '0'
+
+    # map 1's to X gates
     for qubit in range(input_size):
         if b_str[qubit] == '1':
             qc.x(qubit)
