@@ -76,6 +76,9 @@ session_count = 0
 session = None
 sampler = None
 
+# Use the IBM Quantum Platform system; default is to use the new IBM Cloud
+use_ibm_quantum_platform = False
+
 # IBM-Q Service save here if created
 service = None
 
@@ -215,29 +218,54 @@ def custom_noise_model():
     # If noise_model is provided, set the global noise variable to the provided noise model
     noise = NoiseModel()
 
-    # Example of setting amplitude damping error for single-qubit gates
-    one_qb_error = 0.005  # Modify this value as needed
-    noise.add_all_qubit_quantum_error(amplitude_damping_error(one_qb_error), ['rx', 'ry', 'rz'])
+    # Add depolarizing error to all single qubit gates with error rate 0.05% and to all two qubit gates with error rate 0.5%
+    depol_one_qb_error = 0.05
+    depol_two_qb_error = 0.005
+    noise.add_all_qubit_quantum_error(depolarizing_error(depol_one_qb_error, 1), ['rx', 'ry', 'rz'])
+    noise.add_all_qubit_quantum_error(depolarizing_error(depol_two_qb_error, 2), ['cx'])
+    
+    # Add amplitude damping error to all single qubit gates with error rate 0.0% and to all two qubit gates with error rate 0.0%
+    amp_damp_one_qb_error = 0.0
+    amp_damp_two_qb_error = 0.0
+    noise.add_all_qubit_quantum_error(depolarizing_error(amp_damp_one_qb_error, 1), ['rx', 'ry', 'rz'])
+    noise.add_all_qubit_quantum_error(depolarizing_error(amp_damp_two_qb_error, 2), ['cx'])
+    
+    # Add reset noise to all single qubit resets
+    reset_to_zero_error = 0.005
+    reset_to_one_error = 0.005
+    noise.add_all_qubit_quantum_error(reset_error(reset_to_zero_error, reset_to_one_error),["reset"])
+    
+    # Add readout error
+    p0given1_error = 0.000
+    p1given0_error = 0.000
+    error_meas = ReadoutError([[1 - p1given0_error, p1given0_error], [p0given1_error, 1 - p0given1_error]])
+    noise.add_all_qubit_readout_error(error_meas)
+    
+    #print(noise_parameters)
 
-    # Example of setting amplitude damping error for two-qubit gates (e.g., CX gate)
-    two_qb_error = 0.05  # Modify this value as needed
-    noise.add_all_qubit_quantum_error(amplitude_damping_error(two_qb_error).tensor(amplitude_damping_error(two_qb_error)), ['cx'])
+    # # Example of setting amplitude damping error for single-qubit gates
+    # one_qb_error = 0.005  # Modify this value as needed
+    # noise.add_all_qubit_quantum_error(amplitude_damping_error(one_qb_error), ['rx', 'ry', 'rz'])
 
-    # Example of setting phase damping error for single-qubit gates
-    phase_damping_param = 0.01  # Modify this value as needed
-    noise.add_all_qubit_quantum_error(phase_damping_error(phase_damping_param), ['u1', 'u2', 'u3'])
+    # # Example of setting amplitude damping error for two-qubit gates (e.g., CX gate)
+    # two_qb_error = 0.05  # Modify this value as needed
+    # noise.add_all_qubit_quantum_error(amplitude_damping_error(two_qb_error).tensor(amplitude_damping_error(two_qb_error)), ['cx'])
 
-    # Example of setting Kraus error
-    kraus_ops = [np.sqrt(0.9) * np.eye(2), np.sqrt(0.1) * np.array([[0, 1], [1, 0]])]  # Modify Kraus operators as needed
-    noise.add_all_qubit_quantum_error(kraus_error(kraus_ops), ['h', 'p'])
+    # # Example of setting phase damping error for single-qubit gates
+    # phase_damping_param = 0.01  # Modify this value as needed
+    # noise.add_all_qubit_quantum_error(phase_damping_error(phase_damping_param), ['u1', 'u2', 'u3'])
 
-    # Example of setting thermal relaxation error
-    relaxation_time_1 = 100  # T1 in microseconds, modify this value as needed
-    relaxation_time_2 = 200  # T2 in microseconds, modify this value as needed
-    gate_time = 50  # Gate time in microseconds, modify this value as needed
-    excited_state_population = 0.01  # Excited state population at equilibrium, modify as needed
-    thermal_error = thermal_relaxation_error(relaxation_time_1, relaxation_time_2, gate_time, excited_state_population)
-    noise.add_all_qubit_quantum_error(thermal_error, ['rx', 'ry', 'h', 'p'])
+    # # Example of setting Kraus error
+    # kraus_ops = [np.sqrt(0.9) * np.eye(2), np.sqrt(0.1) * np.array([[0, 1], [1, 0]])]  # Modify Kraus operators as needed
+    # noise.add_all_qubit_quantum_error(kraus_error(kraus_ops), ['h', 'p'])
+
+    # # Example of setting thermal relaxation error
+    # relaxation_time_1 = 100  # T1 in microseconds, modify this value as needed
+    # relaxation_time_2 = 200  # T2 in microseconds, modify this value as needed
+    # gate_time = 50  # Gate time in microseconds, modify this value as needed
+    # excited_state_population = 0.01  # Excited state population at equilibrium, modify as needed
+    # thermal_error = thermal_relaxation_error(relaxation_time_1, relaxation_time_2, gate_time, excited_state_population)
+    # noise.add_all_qubit_quantum_error(thermal_error, ['rx', 'ry', 'h', 'p'])
 
     return noise
 
@@ -350,6 +378,8 @@ def set_execution_target(backend_id='qasm_simulator',
     
     # otherwise use the given providername or backend_id to find the backend
     else:
+        global service
+        global sampler
     
         # if provider_module name and provider_name are provided, obtain a custom provider
         if provider_module_name and provider_name:  
@@ -401,8 +431,9 @@ def set_execution_target(backend_id='qasm_simulator',
                     
             backend.latest_session = session
             
-        # otherwise, assume the backend_id is given only and assume it is IBMQ device
-        else:
+        ###############################
+        # if using IBM Quantum Platform, assume the backend_id is given only
+        elif use_ibm_quantum_platform:
             from qiskit import IBMQ
             if IBMQ.stored_account():
             
@@ -417,8 +448,6 @@ def set_execution_target(backend_id='qasm_simulator',
                 # if use sessions, setup runtime service, Session, and Sampler
                 if use_sessions:
                     from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Session, Options
-                    global service
-                    global sampler
                     
                     service = QiskitRuntimeService()
                     session_count += 1
@@ -462,6 +491,67 @@ def set_execution_target(backend_id='qasm_simulator',
                     backend = provider.get_backend(backend_id)
             else:
                 print(authentication_error_msg.format("IBMQ"))
+
+        ###############################
+        # otherwise, assume the backend_id is given only and assume it is IBM Cloud device
+        else:
+            from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Session, Options
+
+            # create the Runtime Service object
+            service = QiskitRuntimeService()
+
+            # obtain a backend from the service
+            backend = service.backend(backend_id)
+
+            # DEVNOTE: here we assume if the sessions flag is set, we use Sampler
+            # however, we may want to add a use_sampler option so that we can separate these
+
+            # set use_sessions if provided by user - NOTE: this will modify the global setting
+            this_use_sessions = exec_options.get("use_sessions", None)
+            if this_use_sessions != None:
+                use_sessions = this_use_sessions
+
+            # if use sessions, setup runtime service, Session, and Sampler
+            if use_sessions:
+
+                if verbose:
+                    print("... using sessions")
+
+                session = Session(service=service, backend=backend_id)
+
+                # get Sampler resilience level and transpiler optimization level from exec_options
+                options = Options()
+                options.resilience_level = exec_options.get("resilience_level", 1)
+                options.optimization_level = exec_options.get("optimization_level", 3)
+
+                # special handling for ibmq_qasm_simulator to set noise model
+                if backend_id == "ibmq_qasm_simulator":
+                    this_noise = noise
+
+                    # get noise model from options; used only in simulators for now
+                    if "noise_model" in exec_options:
+                        this_noise = exec_options.get("noise_model", None)
+                        if verbose:
+                            print(f"... using custom noise model: {this_noise}")
+
+                    # attach to backend if not None
+                    if this_noise != None:
+                        options.simulator = {"noise_model": this_noise}
+                        metrics.QV = this_noise.QV
+                        if verbose:
+                            print(f"... setting noise model, QV={this_noise.QV} on {backend_id}")
+
+                if verbose:
+                    print(f"... execute using Sampler on backend_id {backend_id} with options = {options}")
+
+                # create the Qiskit Sampler with these options
+                sampler = Sampler(session=session, options=options)
+
+            # otherwise, use the circuit runner in the submit_circuit method, without sessions
+            else: 
+                if verbose:
+                    print("... not using sessions")
+                    print(f"... execute using Circuit Runner on backend_id {backend_id}")
 
     # create an informative device name for plots
     device_name = backend_id
