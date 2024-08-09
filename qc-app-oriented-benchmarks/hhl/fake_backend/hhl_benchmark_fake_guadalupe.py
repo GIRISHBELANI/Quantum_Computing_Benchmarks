@@ -653,7 +653,7 @@ def analyze_and_print_result (qc, result, num_qubits, s_int, num_shots):
 #      num_qubits = 2 * num_input_qubits + num_clock_qubits + 1 (the ancilla)
 
 def run (min_qubits=3, max_qubits=16, skip_qubits=1, max_circuits=3, num_shots=1000,    
-        method = 1, use_best_widths=True,    
+        method = 1, use_best_widths=True, min_register_qubits=1,    
         backend_id='fake_guadalupe',           # A fake 16 qubit backend.
         provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
@@ -697,7 +697,7 @@ def run (min_qubits=3, max_qubits=16, skip_qubits=1, max_circuits=3, num_shots=1
     return run2(min_input_qubits=min_input_qubits,max_input_qubits= max_input_qubits,
             min_clock_qubits=min_clock_qubits, max_clock_qubits=max_clock_qubits,
             skip_qubits=skip_qubits,
-            max_circuits=max_circuits, num_shots=num_shots, 
+            max_circuits=max_circuits, num_shots=num_shots, min_register_qubits=min_register_qubits,
             method=method, use_best_widths=use_best_widths,
             backend_id=backend_id, provider_backend=provider_backend,
             hub=hub, group=group, project=project, exec_options=exec_options,
@@ -711,7 +711,7 @@ def run (min_qubits=3, max_qubits=16, skip_qubits=1, max_circuits=3, num_shots=1
 def run2 (min_input_qubits=1, max_input_qubits=16, skip_qubits=1,
         min_clock_qubits=1, max_clock_qubits=3,
         max_circuits=3, num_shots=1000,
-        method=2, use_best_widths=False,
+        method=2, use_best_widths=False, min_register_qubits=1,
         backend_id='fake_guadalupe', provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
         context=None):  
@@ -723,6 +723,7 @@ def run2 (min_input_qubits=1, max_input_qubits=16, skip_qubits=1,
     max_input_qubits = max(min_input_qubits, max_input_qubits)
     min_clock_qubits = min(max(1, min_clock_qubits), max_clock_qubits)
     max_clock_qubits = max(min_clock_qubits, max_clock_qubits)
+    skip_qubits = max(1, skip_qubits)
     #print(f"... in, clock: {min_input_qubits}, {max_input_qubits}, {min_clock_qubits}, {max_clock_qubits}")
     
     # initialize saved circuits for display
@@ -803,7 +804,7 @@ def run2 (min_input_qubits=1, max_input_qubits=16, skip_qubits=1,
                 if verbose:
                     print(f"... SKIPPING {num_circuits} circuits with {num_input_qubits} input qubits and {num_clock_qubits} clock qubits")
                 continue
-                
+            
             print(f"************\nExecuting {num_circuits} circuits with {num_qubits} qubits, using {num_input_qubits} input qubits and {num_clock_qubits} clock qubits")
             
             # loop over randomly generated problem instances
