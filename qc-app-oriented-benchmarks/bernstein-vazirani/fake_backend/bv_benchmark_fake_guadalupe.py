@@ -145,7 +145,7 @@ def analyze_and_print_result (qc, result, num_qubits, secret_int, num_shots):
 # Execute program with default parameters
 def run (min_qubits=2, max_qubits=16, skip_qubits=1, max_circuits=3, num_shots=1000,
         backend_id='fake_guadalupe',      # A fake 16 qubit backend.
-        method = 1, provider_backend=None,
+        method = 1, provider_backend=None, input_value=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
         context=None):
 
@@ -214,6 +214,11 @@ def run (min_qubits=2, max_qubits=16, skip_qubits=1, max_circuits=3, num_shots=1
         # loop over limited # of secret strings for this
         for s_int in s_range:
 
+            # if user specifies input_value, use it instead
+            # DEVNOTE: if max_circuits used, this will generate multiple bars per width
+            if input_value is not None:
+                s_int = input_value
+            
             # create the circuit for given qubit size and secret string, store time metric
             ts = time.time()
             qc = BersteinVazirani(num_qubits, s_int, method)

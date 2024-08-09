@@ -141,7 +141,7 @@ def analyze_and_print_result (qc, result, num_qubits, secret_int, num_shots):
 
 # Execute program with default parameters
 def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=1000,
-        backend_id='statevector_simulator', method = 1, provider_backend=None,
+        backend_id='statevector_simulator', method = 1, provider_backend=None, input_value=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
         context=None):
 
@@ -209,6 +209,11 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=10
                 
         # loop over limited # of secret strings for this
         for s_int in s_range:
+            
+            # if user specifies input_value, use it instead
+            # DEVNOTE: if max_circuits used, this will generate multiple bars per width
+            if input_value is not None:
+                s_int = input_value
 
             # create the circuit for given qubit size and secret string, store time metric
             ts = time.time()
