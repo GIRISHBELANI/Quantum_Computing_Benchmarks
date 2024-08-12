@@ -686,7 +686,7 @@ def execute_circuit(circuit):
     qc_tr_depth = qc_depth
     qc_tr_size = qc_size
     qc_tr_count_ops = qc_count_ops
-    qc_tr_xi = qc_xi; 
+    qc_tr_xi = qc_xi
     qc_tr_n2q = qc_n2q
     #print(f"... before tp: {qc_depth} {qc_size} {qc_count_ops}")
     
@@ -916,7 +916,7 @@ def wait_on_job_result(job, active_circuit):
             result = job.result()
             break
                          
-        except Exception as e:
+        except Exception:
             print(f'... error occurred during job.result() for circuit {active_circuit["group"]} {active_circuit["circuit"]} -- retry {retry_count}')
             if verbose: print(traceback.format_exc())
             time.sleep(15)
@@ -1196,7 +1196,7 @@ def job_complete(job):
                                 active_circuit["shots"]
                                 )
                             
-            except Exception as e:
+            except Exception:
                 print(f'ERROR: failed to execute result_handler for circuit {active_circuit["group"]} {active_circuit["circuit"]}')
                 print(f"... exception = {e}")
                 if verbose:
@@ -1735,10 +1735,10 @@ def job_wait_for_completion(job):
     #if verbose: print("Job status is ", job.status() )
     
     if job.status() == JobStatus.CANCELLED:
-        print(f"\n... circuit execution cancelled.")
+        print("\n... circuit execution cancelled.")
             
     if job.status() == JobStatus.ERROR:
-        print(f"\n... circuit execution failed.")
+        print("\n... circuit execution failed.")
 
 
 

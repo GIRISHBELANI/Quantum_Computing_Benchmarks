@@ -38,7 +38,7 @@ def QuantumFourierTransform (num_qubits, secret_int, method=1):
     depth = 0
     
     # allocate qubits
-    qr = QuantumRegister(num_qubits); cr = ClassicalRegister(num_qubits);
+    qr = QuantumRegister(num_qubits); cr = ClassicalRegister(num_qubits)
     qc = QuantumCircuit(qr, cr, name=f"qft({method})-{num_qubits}-{secret_int}")
 
     if method==1:
@@ -247,7 +247,7 @@ def analyze_and_print_result (qc, result, num_qubits, secret_int, num_shots, met
 ################ Benchmark Loop
 
 # Execute program with default parameters
-def run (min_qubits = 2, max_qubits = 8, max_circuits = 3, skip_qubits=1, num_shots = 100,
+def run (min_qubits = 2, max_qubits = 8, max_circuits = 3, skip_qubits=1, num_shots = 1000,
         method=1, 
         backend_id='qasm_simulator', provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,

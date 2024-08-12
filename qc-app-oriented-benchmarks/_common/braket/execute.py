@@ -180,16 +180,6 @@ def execute_circuit(batched_circuit):
         print(f"... exception = {e}")
         return
 
-    if type(noise) == str and noise == "DEFAULT":
-        # depolarizing noise on all qubits
-        circuit = circuit.with_noise(cirq.depolarize(0.05))
-    elif type(noise) == str and noise == "apply_noise_models":
-        circuit = apply_noise_models(circuit, noise_models_list)        
-    elif noise is not None:
-        # otherwise we expect it to be a NoiseModel
-        # see documentation at https://quantumai.google/cirq/noise
-        circuit = circuit.with_noise(noise)
-
     # store circuit dimensional metrics
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'depth', qc_depth)
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'size', qc_size)
@@ -285,7 +275,10 @@ def braket_execute(qc, shots=100):
     
     # immediate completion if Local Simulator
     if isinstance(device, LocalSimulator):
-        result = device.run(qc, shots).result()        
+        result = device.run(qc, shots).result()   
+        # compiled_circuit = result.get_compiled_circuit()
+        # print("compiled_circuit ===== \n", compiled_circuit)
+        
         
     # returns task object if managed device
     else:

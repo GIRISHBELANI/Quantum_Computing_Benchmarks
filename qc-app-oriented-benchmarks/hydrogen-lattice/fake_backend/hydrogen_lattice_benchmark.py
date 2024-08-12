@@ -1319,7 +1319,7 @@ def run(
             # if the problem is not pre-defined, we are done with this number of qubits
             operator = get_operator_for_problem(instance_filepath)
             if operator is None:
-                print(f"  ... problem not found.")
+                print("  ... problem not found.")
                 break
 
             # get a list of the classical solutions for this problem

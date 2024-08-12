@@ -1319,7 +1319,7 @@ def run(
             # if the problem is not pre-defined, we are done with this number of qubits
             operator = get_operator_for_problem(instance_filepath)
             if operator is None:
-                print(f"  ... problem not found.")
+                print("  ... problem not found.")
                 break
 
             # get a list of the classical solutions for this problem
@@ -1390,7 +1390,7 @@ def run(
 
             ###############
             if method == 2:
-                logger.info(f"===============  Begin method 2 loop, enabling transpile")
+                logger.info("===============  Begin method 2 loop, enabling transpile")
 
                 # a unique circuit index used inside the inner minimizer loop as identifier
                 # Value of 0 corresponds to the 0th iteration of the minimizer
@@ -1478,7 +1478,7 @@ def run(
                             cached_circuits = False
                             if cached_circuits:
                                 ex.set_tranpilation_flags(do_transpile_metrics=False, do_transpile_for_execute=False)
-                                logger.info(f"**** First execution complete, disabling transpile")
+                                logger.info("**** First execution complete, disabling transpile")
 
                         # result array stores the multiple results we measure along different Pauli basis.
                         #global saved_result
@@ -1516,7 +1516,7 @@ def run(
                                 cached_circuits = False
                                 if cached_circuits:
                                     ex.set_tranpilation_flags(do_transpile_metrics=False, do_transpile_for_execute=False)
-                                    logger.info(f"**** First execution complete, disabling transpile")
+                                    logger.info("**** First execution complete, disabling transpile")
      
                             # result array stores the multiple results we measure along different Pauli basis.
                             global saved_result

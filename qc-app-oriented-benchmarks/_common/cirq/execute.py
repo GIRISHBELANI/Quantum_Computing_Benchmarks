@@ -122,6 +122,12 @@ def set_execution_target(backend_id='simulator', provider_backend=None):
     # otherwise test for simulator
     elif backend_id == 'simulator':
         backend = cirq.Simulator()
+
+    elif backend_id == 'densitymatrixsimulator':
+        backend = cirq.DensityMatrixSimulator()
+
+    elif backend_id == 'cliffordsimulator':
+        backend = cirq.CliffordSimulator()
        
     # nothing else is supported yet, default to simulator       
     else:
@@ -147,8 +153,8 @@ def set_noise_model(noise_model = None):
     noise = noise_model
 
 # set_noise_model(noise_model = "apply_noise_models")    # to execute with list of noise_models
-# set_noise_model(noise_model = "DEFAULT")   # to execute with DEFAULT noise
-set_noise_model(noise_model = None)   # for noise-free model
+# set_noise_model(noise_model = "DEFAULT")               # to execute with DEFAULT noise
+set_noise_model(noise_model = None)                      # for noise-free model
 
 # Submit circuit for execution
 # This version executes immediately and calls the result handler
@@ -161,7 +167,6 @@ def submit_circuit (qc, group_id, circuit_id, shots=100):
     )
     #print("... submit circuit - ", str(batched_circuits[len(batched_circuits)-1]))
 
-    
     
 # Launch execution of all batched circuits
 def execute_circuits ():
@@ -180,6 +185,9 @@ def execute_circuit (batched_circuit):
     # Initiate execution 
     job = Job()
     circuit = batched_circuit["qc"]
+
+    # print("batched_circuit ======\n", batched_circuit)
+    # print("circuit ======\n", circuit)
 
     # obtain initial circuit metrics
     qc_depth, qc_size, qc_count_ops = get_circuit_metrics(circuit)
@@ -351,7 +359,7 @@ def count_ops(circuit: cirq.Circuit) -> OrderedDict[str, int]:
 
     return OrderedDict(sorted(count_ops.items(), key=lambda kv: kv[1], reverse=True))
     
-#########################################################################################
+################################################################
 
 # Set the state of the transpilation flags
 def set_tranpilation_flags(do_transpile_metrics = True, do_transpile_for_execute = True):

@@ -13,7 +13,7 @@ sys.path[1:1] = ["_common", "_common/braket", "shors/_common", "quantum-fourier-
 sys.path[1:1] = ["../../_common", "../../_common/braket", "../../shors/_common", "../../quantum-fourier-transform/braket"]
 import execute as ex
 import metrics as metrics
-from shors_utils import getAngles, getAngle, modinv, generate_base, verify_order
+from shors_utils import getAngles, getAngle, modinv, generate_base
 from qft_benchmark import inv_qft_gate, qft_gate
 
 np.random.seed(0)
@@ -70,7 +70,7 @@ def ccphiADDmodN(num_qubits, a, N):
     # Generate relevant gates for circuit
     ccphiadda_gate = ccphiADD(num_qubits + 1, a)
     ccphiadda_inv_gate = ccphiADD(num_qubits + 1, a).inverse()
-    phiaddN_inv_gate = phiADD(num_qubits + 1, N).inverse();
+    phiaddN_inv_gate = phiADD(num_qubits + 1, N).inverse()
     phiaddN_inv_gate.name = "inv_\u03C6ADD"
     cphiaddN_gate = cphiADD(num_qubits + 1, N)
 
@@ -134,7 +134,7 @@ def cMULTamodN(n, a, N):
         # Create relevant temporary qubit list
         qubits = [qr_ctl[0]];
         qubits.extend([qr_x[i]])
-        qubits.extend([i for i in qr_main]);
+        qubits.extend([i for i in qr_main])
         qubits.extend([qr_ancilla[0]])
 
         qc.append(ccphiADDmodN_gate, qubits)
@@ -165,8 +165,8 @@ def controlled_Ua(n, a, exponent, N):
     cMULTamodN_inv_gate.name = "inv_cMULTamodN"
 
     # Create relevant temporary qubit list
-    qubits = [i for i in qr_ctl];
-    qubits.extend([i for i in qr_x]);
+    qubits = [i for i in qr_ctl]
+    qubits.extend([i for i in qr_x])
     qubits.extend([i for i in qr_main])
     qubits.extend([i for i in qr_ancilla])
 
@@ -263,7 +263,7 @@ def ShorsAlgorithm(number, base, method, verbose=verbose):
 
             # Create relevant temporary qubit list
             qubits = [qr_up[0]];
-            qubits.extend([i for i in qr_down]);
+            qubits.extend([i for i in qr_down])
             qubits.extend([i for i in qr_aux])
 
             qc.append(cUa_gate, qubits)
@@ -446,13 +446,13 @@ def run(min_qubits=3, max_circuits=1, max_qubits=18, num_shots=100, method=1,
     print(QC_ if QC_ != None else "  ... too large!")
     print("\nControlled Ua Operator 'cUa' =");
     print(CUA_ if CUA_ != None else " ... too large!")
-    print("\nControlled Multiplier Operator 'cMULTamodN' =");
+    print("\nControlled Multiplier Operator 'cMULTamodN' =")
     print(CMULTAMODN_ if CMULTAMODN_ != None else " ... too large!")
-    print("\nControlled Modular Adder Operator 'ccphiamodN' =");
+    print("\nControlled Modular Adder Operator 'ccphiamodN' =")
     print(CCPHIADDMODN_ if CCPHIADDMODN_ != None else " ... too large!")
-    print("\nPhi Adder Operator '\u03C6ADD' =");
+    print("\nPhi Adder Operator '\u03C6ADD' =")
     print(PHIADD_ if PHIADD_ != None else " ... too large!")
-    print("\nQFT Circuit =");
+    print("\nQFT Circuit =")
     print(QFT_ if QFT_ != None else "  ... too large!")
 
     # Plot metrics for all circuit sizes

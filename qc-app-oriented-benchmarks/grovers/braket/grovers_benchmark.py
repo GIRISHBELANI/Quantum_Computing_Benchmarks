@@ -233,7 +233,7 @@ def grovers_dist(num_qubits, marked_item):
 ################ Benchmark Loop
 
 # Execute program with default parameters
-def run (min_qubits=2, max_qubits = 6, max_circuits = 3, num_shots = 100,
+def run (min_qubits=2, max_qubits = 8, max_circuits = 3, num_shots = 1000,
         backend_id = 'simulator',
         use_cu1_shim=False):
 
