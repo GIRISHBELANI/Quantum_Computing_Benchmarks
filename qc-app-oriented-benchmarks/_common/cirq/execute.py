@@ -339,10 +339,21 @@ def count_ops(circuit: cirq.Circuit) -> OrderedDict[str, int]:
         # Handle custom gates by providing a meaningful name
         gate_name = str(op.gate)
         
-        if '.to_gate' in gate_name:
+        # Handle controlled gates specifically
+        if isinstance(op.gate, cirq.ControlledGate):
+            # Decompose the controlled gate and process each sub-operation
+            decomposed_ops = cirq.decompose(op)
+            # Check if decomposed_ops is a list
+            if isinstance(decomposed_ops, list):
+                for inner_op in decomposed_ops:
+                    process_op(inner_op)
+            else:
+                for inner_op in decomposed_ops.all_operations():
+                    process_op(inner_op)
+            # Handle custom gates by decomposing them if they have a .to_gate method
+        elif '.to_gate' in gate_name:
             qr_state = [cirq.GridQubit(i, 0) for i in range(op.gate.num_qubits)]
             decomposed_ops = cirq.Circuit(cirq.decompose(op.gate.on(*qr_state)))
-            # print(f"\ndecomposed sub-circuit {gate_name} =====\n{decomposed_ops}")
             for inner_op in decomposed_ops.all_operations():
                 process_op(inner_op)
 
@@ -388,17 +399,34 @@ def count_gate_operations(circuit: cirq.Circuit) -> int:
         else:
             total_gate_operations += 1
 
+            # Handle controlled gates specifically
+            if isinstance(op.gate, cirq.ControlledGate):
+                # Decompose the controlled gate and process each sub-operation
+                decomposed_ops = cirq.decompose(op)
+                # Check if decomposed_ops is a list
+                if isinstance(decomposed_ops, list):
+                    for inner_op in decomposed_ops:
+                        process_op(inner_op)
+                else:
+                    for inner_op in decomposed_ops.all_operations():
+                        process_op(inner_op)
             # Handle custom gates by decomposing them if they have a .to_gate method
-            gate_name = str(op.gate)
-            if '.to_gate' in gate_name:
-                qr_state = [cirq.GridQubit(i, 0) for i in range(op.gate.num_qubits)]
-                decomposed_ops = cirq.Circuit(cirq.decompose(op.gate.on(*qr_state)))
-                for inner_op in decomposed_ops.all_operations():
-                    process_op(inner_op)
+            elif hasattr(op.gate, 'to_gate'):
+                print(op.gate)
+                qr_state = [cirq.GridQubit(i, 0) for i in range(op.gate.num_qubits())]
+                print(qr_state)
+                decomposed_ops = cirq.decompose(op.gate.on(*qr_state))
+                # Check if decomposed_ops is a list
+                if isinstance(decomposed_ops, list):
+                    for inner_op in decomposed_ops:
+                        process_op(inner_op)
+                else:
+                    for inner_op in decomposed_ops.all_operations():
+                        process_op(inner_op)
             else:
-                # Count the operation itself
-                total_gate_operations += 1
-     
+                # Count the operation based on the number of qubits
+                total_gate_operations += len(op.qubits)
+                
     # Process each operation in the circuit
     for moment in circuit:
         for op in moment.operations:
