@@ -174,4 +174,7 @@ Below is a table showing the degree to which the benchmarks have been implemente
 
 ![Prototype Benchmarks - Implementation Status](./_doc/images/proto_benchmarks_status.png)
 
+## Launch on qBraid
+Clone this repository to your qBraid account in one click and skip the installation procedure for running the benchmarking notebooks.
 
+[<img src="https://qbraid-static.s3.amazonaws.com/logos/Launch_on_qBraid_white.png" width="150">](https://account.qbraid.com?gitHubUrl=https://github.com/SRI-International/QC-App-Oriented-Benchmarks.git)
