@@ -29,6 +29,8 @@ import metrics
 
 import cudaq
 
+verbose = False
+
 ###import cirq
 ###backend = cirq.Simulator()      # Use Cirq Simulator by default
 
@@ -48,10 +50,7 @@ device=None
 #######################
 # SUPPORTING CLASSES
 
-# class BenchmarkResult is made for sessions runs. This is because
-# qiskit primitive job result instances don't have a get_counts method 
-# like backend results do. As such, a get counts method is calculated
-# from the quasi distributions and shots taken.
+# class BenchmarkResult is used as a compatible return object from execution
 class BenchmarkResult(object):
 
     def __init__(self, cq_result):
@@ -59,12 +58,6 @@ class BenchmarkResult(object):
         self.cq_result = cq_result
 
     def get_counts(self, qc=0):
-        #counts = None
-        '''
-        self.qiskit_result.quasi_dists[0].binary_probabilities()
-        for key in counts.keys():
-            counts[key] = int(counts[key] * self.qiskit_result.metadata[0]['shots']) 
-        '''
         counts = self.cq_result
         return counts
 
@@ -104,11 +97,11 @@ def init_execution (handler):
 
 
 # Set the backend for execution
-def set_execution_target(backend_id='simulator', provider_backend=None,
+def set_execution_target(backend_id='cudaq_simulator', provider_backend=None,
         hub=None, group=None, project=None, exec_options=None,
         context=None):
     """
-    Used to run jobs on a real hardware
+    Set the backend execution target.
     :param backend_id:  device name. List of available devices depends on the provider
     :provider_backend: a custom backend object created and passed in, use backend_id as identifier
     
@@ -117,7 +110,11 @@ def set_execution_target(backend_id='simulator', provider_backend=None,
                         provider_backende=aqt.backends.aqt_qasm_simulator)
     """
     global backend   
-    
+
+    # default to cudaq_simulator if None passed in
+    if backend_id == None:
+        backend_id="cudaq_simulator"
+
     # if a custom provider backend is given, use it ...
     if provider_backend != None:
         backend = provider_backend
@@ -153,7 +150,9 @@ def submit_circuit (qc, group_id, circuit_id, shots=100):
             "submit_time": time.time(), "shots": shots }
     )
     #print("... submit circuit - ", str(batched_circuits[len(batched_circuits)-1]))
-    
+
+    # DEVNOTE: execute immediately for now, so that we don't accumulate elapsed time while in queue
+    execute_circuits()  
     
 # Launch execution of all batched circuits
 def execute_circuits ():
@@ -163,6 +162,9 @@ def execute_circuits ():
     
 # Launch execution of one batched circuit
 def execute_circuit (batched_circuit):
+
+    if verbose:
+        print(f'... execute_circuit({batched_circuit["group"]}, {batched_circuit["circuit"]})')
 
     active_circuit = copy.copy(batched_circuit)
     active_circuit["launch_time"] = time.time()
@@ -191,17 +193,24 @@ def execute_circuit (batched_circuit):
     # create a pseudo-job to perform metrics processing upon return
     job = Job()
     
-    #print(cudaq.draw(circuit[0], circuit[1], circuit[2], circuit[3]))
+    # draw the circuit, but only for debugging
+    #print(cudaq.draw(circuit[0], *circuit[1]))
     
     ts = time.time()
-    result = cudaq.sample(circuit[0], circuit[1], circuit[2], circuit[3], shots_count=num_shots)
+    # call sample() on circuit with its list of arguments
+    result = cudaq.sample(circuit[0], *circuit[1], shots_count=num_shots)
     exec_time = time.time() - ts
     
     # store the result object on the job for processing in job_complete
     job.executor_result = result 
     job.exec_time = exec_time
-    
-    print(f"... result = {result}")
+
+    if verbose:
+        print(f"... result = {len(result)} {result}")
+        ''' for debugging, a better way to see the counts, as the type of result is something Quake
+        for key, val in result.items():
+            print(f"... {key}:{val}")
+        '''
     
     # put job into the active circuits with circuit info
     active_circuits[job] = active_circuit
@@ -220,21 +229,14 @@ def job_complete (job):
         
     # get job result (DEVNOTE: this might be different for diff targets)
     cq_result = job.result()
-    print("... result2 = ", str(cq_result))
-    
+
+    # create a compatible Result object to return to the caller    
     result = BenchmarkResult(cq_result)
     
     # counts = result.get_counts(qc)
     # print("Total counts are:", counts)
-    '''
-    # get measurement array and shot count
-    measurements = result.measurements['result']
-    actual_shots = len(measurements)
-    #print(f"actual_shots = {actual_shots}")
-    
-    if actual_shots != active_circuit["shots"]:
-        print(f"WARNING: requested shots not equal to actual shots: {actual_shots}")
-    '''   
+
+    # store time metrics   
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'elapsed_time',
         time.time() - active_circuit["submit_time"])
        
@@ -246,7 +248,7 @@ def job_complete (job):
         result_handler(active_circuit["qc"],
             result, active_circuit["group"], active_circuit["circuit"], active_circuit["shots"])
     
-
+    # DEVNOTE: a hack to store the last group identifier for use in the job management functions
     group = active_circuit["group"]
     global last_group
     last_group = group
@@ -272,9 +274,12 @@ def job_complete (job):
 def throttle_execution(completion_handler=metrics.finalize_group):
     #logger.info('Entering throttle_execution')
 
-    #if verbose:
-        #print(f"... throttling execution, active={len(active_circuits)}, batched={len(batched_circuits)}")
+    if verbose:
+        print(f"... throttling execution, active={len(active_circuits)}, batched={len(batched_circuits)}")
 
+    # DEVNOTE: execution is currently synchronous, so force execution of any batched circuits
+    execute_circuits()
+    
     global last_group
     group = last_group
     
@@ -317,8 +322,12 @@ def throttle_execution(completion_handler=metrics.finalize_group):
 
 def finalize_execution(completion_handler=metrics.finalize_group, report_end=True):
 
-    #if verbose:
-        #print("... finalize_execution")
+    if verbose:
+        print("... finalize_execution")
+
+    # DEVNOTE: execution is currently synchronous, so force execution of any batched circuits
+    execute_circuits()
+
     '''
     # check and sleep if not complete
     done = False

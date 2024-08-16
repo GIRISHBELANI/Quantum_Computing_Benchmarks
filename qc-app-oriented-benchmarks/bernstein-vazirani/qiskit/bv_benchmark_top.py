@@ -1,45 +1,48 @@
 """
-Bernstein-Vazirani Benchmark Program - Qiskit
+'''
+Bernstein-Vazirani Benchmark Program
+(C) Quantum Economic Development Consortium (QED-C) 2024.
+Technical Advisory Committee on Standards and Benchmarks
+'''
 """
 
 import sys
 import time
-
 import numpy as np
 
-'''
-sys.path[1:1] = [ "_common", "_common/qiskit" ]
-#sys.path[1:1] = [ "../../_common", "../../_common/qiskit" ]
-sys.path[1:1] = [ "../_common", "../_common/qiskit" ]
-'''
+############### Configure API
+# 
+# Configure the QED-C Benchmark package for use with the given API
+def qedc_benchmarks_init(api: str = "qiskit"):
 
-sys.path[1:1] = [ "cudaq" ]
-sys.path[1:1] = [ "_common", "_common/cudaq" ]
-sys.path[1:1] = [ "../_common", "../_common/cudaq" ]
+    if api == None: api = "qiskit"
+    sys.path[1:1] = [ f"{api}" ]
+    sys.path[1:1] = [ "_common", f"_common/{api}" ]
+    sys.path[1:1] = [ "../_common", f"../_common/{api}" ]
 
+    import execute as ex
+    globals()["ex"] = ex
 
-import execute as ex
-import metrics as metrics
+    import metrics as metrics
+    globals()["metrics"] = metrics
 
-from bv_kernel import BersteinVazirani
+    from bv_kernel import BersteinVazirani, kernel_draw
+
+    return BersteinVazirani, kernel_draw
 
 # Benchmark Name
 benchmark_name = "Bernstein-Vazirani Top"
 
 np.random.seed(0)
 
-verbose = False
+verbose = True
 
 # Variable for number of resets to perform after mid circuit measurements
 num_resets = 1
 
-# saved circuits for display
-QC_ = None
-Uf_ = None
-
     
 # Routine to convert the secret integer into an array of integers, each representing one bit
-# DEVNOTE: do we need to converto to string, or can we just keep shifting?
+# DEVNOTE: do we need to convert to string, or can we just keep shifting?
 def str_to_ivec(input_size: int, s_int: int):
 
     # convert the secret integer into a string so we can scan the characters
@@ -87,11 +90,14 @@ def analyze_and_print_result (qc, result, num_qubits, secret_int, num_shots):
 
 # Execute program with default parameters
 def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=100,
-        backend_id='qasm_simulator', method=1, input_value=None,
+        backend_id=None, method=1, input_value=None,
         provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
-        context=None):
+        context=None, api=None):
 
+    # configure the QED-C Benchmark package for use with the given API
+    BersteinVazirani, kernel_draw = qedc_benchmarks_init(api)
+    
     print(f"{benchmark_name} ({method}) Benchmark Program - Qiskit")
 
     # validate parameters (smallest circuit is 3 qubits)
@@ -148,7 +154,11 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=10
         if 2**(input_size) <= max_circuits:
             s_range = list(range(num_circuits))
         else:
-            s_range = np.random.choice(2**(input_size), num_circuits, False)
+            #s_range = np.random.choice(2**(input_size), num_circuits, False)    # DEVNOTE: very slow!
+            # instead, create selection array larger than needed, and remove duplicates
+            # create selection larger than needed and remove duplicates (faster than random.choice())
+            s_range = np.random.randint(1, 2**(input_size), num_circuits + 10)
+            s_range = list(set(s_range))[0:max_circuits]
 
         # loop over limited # of secret strings for this
         for s_int in s_range:
@@ -160,8 +170,7 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=10
 
             # convert the secret int string to array of integers, each representing one bit
             bitset = str_to_ivec(input_size, s_int)
-            if verbose:
-                print(f"... s_int={s_int} bitset={bitset}")
+            if verbose:  print(f"... s_int={s_int} bitset={bitset}")
                 
             # If mid circuit, then add 2 to new qubit group since the circuit only uses 2 qubits
             if method == 2:
@@ -171,28 +180,11 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=10
             ts = time.time()
             
             qc = BersteinVazirani(num_qubits, bitset, method)
-
-            # save smaller circuit example for display
-            global QC_
-            if QC_ == None or num_qubits <= 6:
-                if num_qubits < 9: QC_ = qc
         
             metrics.store_metric(num_qubits, s_int, 'create_time', time.time()-ts)
-
-            # collapse the sub-circuit levels used in this benchmark (for qiskit)
-            '''
-            qc2 = qc.decompose()
-            '''
-            qc2 = qc
+            
             # submit circuit for execution on target (simulator, cloud simulator, or hardware)
-            ex.submit_circuit(qc2, num_qubits, s_int, shots=num_shots)
-         
-        # execute all circuits for this group, aggregate and report metrics when complete
-        '''
-        ADDED THIS
-        '''
-        print("about to execute quantum circuit")
-        ex.execute_circuits()
+            ex.submit_circuit(qc, num_qubits, s_int, shots=num_shots)
         
         # Wait for some active circuits to complete; report metrics when groups complete
         ex.throttle_execution(metrics.finalize_group)  
@@ -203,9 +195,8 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=10
     
     ##########
     
-    # print a sample circuit
-    print("Sample Circuit:"); print(QC_ if QC_ != None else "  ... too large!")
-    if method == 1: print("\nQuantum Oracle 'Uf' ="); print(Uf_ if Uf_ != None else " ... too large!")
+    # draw a sample circuit
+    kernel_draw()
 
     # Plot metrics for all circuit sizes
     metrics.plot_metrics(f"Benchmark Results - {benchmark_name} ({method}) - Qiskit",
@@ -217,8 +208,17 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=10
 import argparse
 def get_args():
     parser = argparse.ArgumentParser(description="Bernstei-Vazirani Benchmark")
+    parser.add_argument("--api", "-a", default=None, help="Programming API", type=str)
+    parser.add_argument("--target", "-t", default=None, help="Target Backend", type=str)
+    parser.add_argument("--backend_id", "-b", default=None, help="Backend Identifier", type=str)
     parser.add_argument("--num_shots", "-s", default=100, help="Number of shots", type=int)
-    parser.add_argument("--num_qubits", "-q", default=8, help="Number of qubits", type=int)
+    parser.add_argument("--num_qubits", "-n", default=0, help="Number of qubits", type=int)
+    parser.add_argument("--min_qubits", "-min", default=3, help="Minimum number of qubits", type=int)
+    parser.add_argument("--max_qubits", "-max", default=8, help="Maximum number of qubits", type=int)
+    parser.add_argument("--skip_qubits", "-k", default=1, help="Number of qubits to skip", type=int)
+    parser.add_argument("--max_circuits", "-c", default=3, help="Maximum circuit repetitions", type=int)  
+    parser.add_argument("--method", "-m", default=1, help="Algorithm Method", type=int)
+    parser.add_argument("--input_value", "-i", default=None, help="Fixed Input Value", type=int)
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose")
     return parser.parse_args()
 
@@ -226,6 +226,20 @@ def get_args():
 if __name__ == '__main__': 
     args = get_args()
 
-    verbose = args.verbose
-    run(min_qubits=args.num_qubits, max_qubits=args.num_qubits, max_circuits=1, num_shots = args.num_shots)
-   
+    # configure the QED-C Benchmark package for use with the given API
+    # (done here so we can set verbose for now)
+    BersteinVazirani, kernel_draw = qedc_benchmarks_init(args.api)
+
+    # special argument handling
+    ex.verbose = args.verbose
+    if args.num_qubits > 0: args.min_qubits = args.max_qubits = args.num_qubits
+
+    # execute benchmark program
+    run(min_qubits=args.min_qubits, max_qubits=args.max_qubits,
+        skip_qubits=args.skip_qubits, max_circuits=args.max_circuits,
+        num_shots=args.num_shots,
+        method=args.method,
+        input_value=args.input_value,
+        backend_id=args.backend_id,
+        api=args.api
+        )   

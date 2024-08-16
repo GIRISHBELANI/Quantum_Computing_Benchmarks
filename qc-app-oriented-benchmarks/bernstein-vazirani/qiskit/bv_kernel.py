@@ -1,29 +1,34 @@
 
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
+from typing import List
+
 ############### BV Circuit Definition
 
-def create_oracle(num_qubits, input_size, secret_int):
+def create_oracle(num_qubits: int, input_size: int, hidden_bits: List[int]):
     # Initialize first n qubits and single ancilla qubit
     qr = QuantumRegister(num_qubits)
     qc = QuantumCircuit(qr, name="Uf")
 
-    # perform CX for each qubit that matches a bit in secret string
-    s = ('{0:0' + str(input_size) + 'b}').format(secret_int)
+    # perform CX for each qubit that matches a bit in secret integer's bits
     for i_qubit in range(input_size):
-        if s[input_size - 1 - i_qubit] == '1':
+        #if hidden_bits[input_size - 1 - i_qubit] == 1:             # DEVNOTE:
+        if hidden_bits[i_qubit] == 1:
             qc.cx(qr[i_qubit], qr[input_size])
     return qc
 
-def BersteinVazirani (num_qubits, secret_int, method = 1):
+def BersteinVazirani (num_qubits: int, hidden_bits: List[int], method: int = 1):
     
     # size of input is one less than available qubits
     input_size = num_qubits - 1
 
+    # method 1 is the traditional algorithm with oracle consuming all but one qubit
     if method == 1:
         # allocate qubits
         qr = QuantumRegister(num_qubits); cr = ClassicalRegister(input_size)
-        qc = QuantumCircuit(qr, cr, name=f"bv({method})-{num_qubits}-{secret_int}")
+        
+        #qc = QuantumCircuit(qr, cr, name=f"bv({method})-{num_qubits}-{secret_int}")    # DEVNOTE
+        qc = QuantumCircuit(qr, cr, name=f"bv({method})-{num_qubits}-X")
 
         # put ancilla in |1> state
         qc.x(qr[input_size])
@@ -35,7 +40,7 @@ def BersteinVazirani (num_qubits, secret_int, method = 1):
         qc.barrier()
 
         #generate Uf oracle
-        Uf = create_oracle(num_qubits, input_size, secret_int)
+        Uf = create_oracle(num_qubits, input_size, hidden_bits)
         qc.append(Uf,qr)
 
         qc.barrier()
@@ -57,15 +62,20 @@ def BersteinVazirani (num_qubits, secret_int, method = 1):
         if Uf_ == None or num_qubits <= 6:
             if num_qubits < 9: Uf_ = Uf
         '''
+
+    # method 2 uses mid-circuit measurement to create circuits with only 2 qubits    
     elif method == 2:
         # allocate qubits
-        qr = QuantumRegister(2); cr = ClassicalRegister(input_size); qc = QuantumCircuit(qr, cr, name="main")
+        qr = QuantumRegister(2); cr = ClassicalRegister(input_size); 
+        qc = QuantumCircuit(qr, cr, name="main")
 
         # put ancilla in |-> state
         qc.x(qr[1])
         qc.h(qr[1])
 
         qc.barrier()
+
+        Uf = None
 
         # perform CX for each qubit that matches a bit in secret string
         s = ('{0:0' + str(input_size) + 'b}').format(secret_int)
@@ -79,11 +89,32 @@ def BersteinVazirani (num_qubits, secret_int, method = 1):
             # Perform num_resets reset operations
             qc.reset([0]*num_resets)
     '''
-    # save smaller circuit example for display
+    # save circuit examples for display
     global QC_
+
+    # save circuit examples for display
+    global QC_, Uf_
+    
     if QC_ == None or num_qubits <= 6:
         if num_qubits < 9: QC_ = qc
     '''
+
+    if Uf_ == None or num_qubits <= 6:
+        if num_qubits < 9: Uf_ = Uf
+
+    # collapse the sub-circuit levels used in this benchmark (for qiskit)
+    qc2 = qc.decompose()
+
     # return a handle on the circuit
-    return qc
-    
+    return qc2
+
+############### BV Circuit Drawer
+
+# Draw the circuits of this benchmark program
+def kernel_draw():
+    print("Sample Circuit:");
+    print(QC_ if QC_ != None else "  ... too large!")
+    #if method == 1:
+    if Uf_ != None:
+        print("\nQuantum Oracle 'Uf' =");
+        print(Uf_ if Uf_ != None else " ... too large!")
