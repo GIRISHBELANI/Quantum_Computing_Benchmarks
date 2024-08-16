@@ -1,18 +1,29 @@
+'''
+Bernstein-Vazirani Benchmark Program - Qiskit Kernel
+(C) Quantum Economic Development Consortium (QED-C) 2024.
+'''
 
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 
 from typing import List
 
+# saved circuits for display
+QC_ = None
+Uf_ = None
+
+# Variable for number of resets to perform after mid circuit measurements
+num_resets = 1
+
 ############### BV Circuit Definition
 
 def create_oracle(num_qubits: int, input_size: int, hidden_bits: List[int]):
+    
     # Initialize first n qubits and single ancilla qubit
     qr = QuantumRegister(num_qubits)
     qc = QuantumCircuit(qr, name="Uf")
 
     # perform CX for each qubit that matches a bit in secret integer's bits
     for i_qubit in range(input_size):
-        #if hidden_bits[input_size - 1 - i_qubit] == 1:             # DEVNOTE:
         if hidden_bits[i_qubit] == 1:
             qc.cx(qr[i_qubit], qr[input_size])
     return qc
@@ -75,29 +86,25 @@ def BersteinVazirani (num_qubits: int, hidden_bits: List[int], method: int = 1):
 
         qc.barrier()
 
+        # there is no oracle to save in this method
         Uf = None
 
-        # perform CX for each qubit that matches a bit in secret string
-        s = ('{0:0' + str(input_size) + 'b}').format(secret_int)
-        for i in range(input_size):
-            if s[input_size - 1 - i] == '1':
+        # perform CX for each qubit that matches a bit in secret integer's bits
+        for i_qubit in range(input_size):
+            if hidden_bits[i_qubit] == 1:
                 qc.h(qr[0])
                 qc.cx(qr[0], qr[1])
                 qc.h(qr[0])
-            qc.measure(qr[0], cr[i])
+            qc.measure(qr[0], cr[i_qubit])
 
             # Perform num_resets reset operations
             qc.reset([0]*num_resets)
-    '''
-    # save circuit examples for display
-    global QC_
 
     # save circuit examples for display
     global QC_, Uf_
     
     if QC_ == None or num_qubits <= 6:
         if num_qubits < 9: QC_ = qc
-    '''
 
     if Uf_ == None or num_qubits <= 6:
         if num_qubits < 9: Uf_ = Uf
