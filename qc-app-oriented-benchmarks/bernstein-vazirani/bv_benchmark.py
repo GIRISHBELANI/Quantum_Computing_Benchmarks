@@ -15,6 +15,7 @@ import numpy as np
 def qedc_benchmarks_init(api: str = "qiskit"):
 
     if api == None: api = "qiskit"
+        
     sys.path[1:1] = [ f"{api}" ]
     sys.path[1:1] = [ "_common", f"_common/{api}" ]
     sys.path[1:1] = [ "../_common", f"../_common/{api}" ]
@@ -30,7 +31,7 @@ def qedc_benchmarks_init(api: str = "qiskit"):
     return BersteinVazirani, kernel_draw
 
 # Benchmark Name
-benchmark_name = "Bernstein-Vazirani Top"
+benchmark_name = "Bernstein-Vazirani"
 
 np.random.seed(0)
 
@@ -114,7 +115,7 @@ def run (min_qubits=3, max_qubits=6, skip_qubits=1, max_circuits=3, num_shots=10
     mid_circuit_qubit_group = []
 
     # If using mid_circuit measurements, set transform qubit group to true
-    transform_qubit_group = True if method ==2 else False
+    transform_qubit_group = True if method == 2 else False
     
     # Initialize metrics module
     metrics.init_metrics()

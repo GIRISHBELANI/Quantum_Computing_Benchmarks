@@ -77,7 +77,7 @@ def BersteinVazirani (num_qubits: int, secret_int: int, hidden_bits: List[int], 
     elif method == 2:
         # allocate qubits
         qr = QuantumRegister(2); cr = ClassicalRegister(input_size); 
-        qc = QuantumCircuit(qr, cr, name=f"bv({method})-{num_qubits}-{secret_int}"))
+        qc = QuantumCircuit(qr, cr, name=f"bv({method})-{num_qubits}-{secret_int}")
 
         # put ancilla in |-> state
         qc.x(qr[1])
