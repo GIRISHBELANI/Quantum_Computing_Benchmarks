@@ -248,7 +248,7 @@ def analyze_and_print_result (qc, result, num_qubits, secret_int, num_shots, met
 
 # Execute program with default parameters
 def run (min_qubits = 2, max_qubits = 16, max_circuits = 3, skip_qubits=1, num_shots = 1000,
-        method=1, 
+        method=1, input_value=None, 
         backend_id='fake_guadalupe',           # A fake 16 qubit backend.
         provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
@@ -303,7 +303,8 @@ def run (min_qubits = 2, max_qubits = 16, max_circuits = 3, skip_qubits=1, num_s
             if 2**(input_size) <= max_circuits:
                 s_range = list(range(num_circuits))
             else:
-                s_range = np.random.choice(2**(input_size), num_circuits, False)
+                s_range = np.random.randint(0, 2**(input_size), num_circuits + 2)
+                s_range = list(set(s_range))[0:num_circuits]
          
         elif method == 3:
             num_circuits = min(input_size, max_circuits)
@@ -311,7 +312,8 @@ def run (min_qubits = 2, max_qubits = 16, max_circuits = 3, skip_qubits=1, num_s
             if input_size <= max_circuits:
                 s_range = list(range(num_circuits))
             else:
-                s_range = np.random.choice(range(input_size), num_circuits, False)
+                s_range = np.random.randint(0, 2**(input_size), num_circuits + 2)
+                s_range = list(set(s_range))[0:num_circuits]
         
         else:
             sys.exit("Invalid QFT method")
@@ -320,7 +322,13 @@ def run (min_qubits = 2, max_qubits = 16, max_circuits = 3, skip_qubits=1, num_s
         
         # loop over limited # of secret strings for this
         for s_int in s_range:
+            s_int = int(s_int)
 
+            # if user specifies input_value, use it instead
+            # DEVNOTE: if max_circuits used, this will generate separate bar for each num_circuits
+            if input_value is not None:
+                s_int = input_value
+                
             # create the circuit for given qubit size and secret string, store time metric
             ts = time.time()
             qc = QuantumFourierTransform(num_qubits, s_int, method=method)
