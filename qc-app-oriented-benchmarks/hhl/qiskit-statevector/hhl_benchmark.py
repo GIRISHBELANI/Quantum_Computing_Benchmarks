@@ -840,15 +840,15 @@ def run2 (min_input_qubits=1, max_input_qubits=8, skip_qubits=1,
 
     ##########
     
-    # print a sample circuit
-    print("Sample Circuit:"); print(QC_ if QC_ != None else "  ... too large!")
-    #if method == 1: print("\nQuantum Oracle 'Uf' ="); print(Uf_ if Uf_ != None else " ... too large!")
-    print("\nU Circuit ="); print(U_ if U_ != None else "  ... too large!")
-    print("\nU^-1 Circuit ="); print(UI_ if UI_ != None else "  ... too large!")
-    print("\nQFT Circuit ="); print(QFT_ if QFT_ != None else "  ... too large!")
-    print("\nInverse QFT Circuit ="); print(QFTI_ if QFTI_ != None else "  ... too large!")
-    print("\nHamiltonian Phase Estimation Circuit ="); print(HP_ if HP_ != None else "  ... too large!")
-    print("\nControlled Rotation Circuit ="); print(INVROT_ if INVROT_ != None else "  ... too large!")
+    # # print a sample circuit
+    # print("Sample Circuit:"); print(QC_ if QC_ != None else "  ... too large!")
+    # #if method == 1: print("\nQuantum Oracle 'Uf' ="); print(Uf_ if Uf_ != None else " ... too large!")
+    # print("\nU Circuit ="); print(U_ if U_ != None else "  ... too large!")
+    # print("\nU^-1 Circuit ="); print(UI_ if UI_ != None else "  ... too large!")
+    # print("\nQFT Circuit ="); print(QFT_ if QFT_ != None else "  ... too large!")
+    # print("\nInverse QFT Circuit ="); print(QFTI_ if QFTI_ != None else "  ... too large!")
+    # print("\nHamiltonian Phase Estimation Circuit ="); print(HP_ if HP_ != None else "  ... too large!")
+    # print("\nControlled Rotation Circuit ="); print(INVROT_ if INVROT_ != None else "  ... too large!")
 
     # Plot metrics for all circuit sizes
     metrics.plot_metrics(f"Benchmark Results - {benchmark_name} - Qiskit",

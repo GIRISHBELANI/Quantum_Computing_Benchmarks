@@ -147,7 +147,7 @@ def analyze_and_print_result (qc, result, num_qubits, type, num_shots):
 ################ Benchmark Loop
 
 # Execute program with default parameters
-def run (min_qubits=3, max_qubits=8, skip_qubits=1, max_circuits=3, num_shots=1000,
+def run (min_qubits=3, max_qubits=24, skip_qubits=1, max_circuits=3, num_shots=1000,
         backend_id='statevector_simulator', provider_backend=None,
         hub="ibm-q", group="open", project="main", exec_options=None,
         context=None):
