@@ -70,3 +70,33 @@ The repository has been validated on Linux using the following versions as minim
     Qiskit-Terra Version: 0.18.3
 
 Earlier (or later) versions of the software might work without issues, but the benchmark has been specifically validated on these versions. If you have any issues installing, please raise an bug report in the issues tab of the repository.
+
+
+# Qiskit - GPU
+
+## Configure a Qiskit Environment for GPU version
+If you are using Anaconda environments, create an environment named "qiskit-aer-gpu" and then "activate" it using the following commands:
+
+    conda create -n qiskit-aer-gpu python=3.10
+
+    conda activate qiskit-aer-gpu
+
+The conda environment is now ready for you to install the Qiskit package.
+
+## Install Qiskit and qiskit-aer-gpu (with versions used for this repository)
+
+Enter the following commands to install the latest version of Qiskit and the other required packages.
+
+    pip install numpy matplotlib pandas openpyxl qiskit==0.45.1 qiskit-ibm-runtime qiskit-aer-gpu==0.13.2 jupyterlab
+
+You are now ready to run the benchmark programs.
+
+Note:
+
+1) No need to install qiskit-aer
+
+2) Take `exec_options = {"device": "GPU"}`, to execute benchmarks on single GPU.
+
+3) Take `exec_options = {"device": "GPU", "blocking_qubits":15}`, to execute benchmarks on multiple GPUs
+
+4) Refer `https://qiskit.github.io/qiskit-aer/howtos/running_gpu.html` to understand about blocking_qubits
