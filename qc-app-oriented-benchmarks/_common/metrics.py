@@ -1601,7 +1601,6 @@ def modify_elapsed_times(avg_elapsed_times, avg_exec_creating_times, avg_exec_ti
 def get_memory_usage():
     usage = resource.getrusage(resource.RUSAGE_SELF)
     maximum_memory = usage.ru_maxrss/1024   # in MB 
-    max_memory_usage = group_metrics["max_memory_usage"].append(maximum_memory)
     return max_memory_usage
     
 #################################################
