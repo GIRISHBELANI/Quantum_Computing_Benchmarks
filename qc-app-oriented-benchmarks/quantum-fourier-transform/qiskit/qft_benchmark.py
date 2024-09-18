@@ -311,9 +311,9 @@ def run (min_qubits = 2, max_qubits = 8, max_circuits = 3, skip_qubits=1, num_sh
             if input_size <= max_circuits:
                 s_range = list(range(num_circuits))
             else:
-                s_range = np.random.randint(0, 2**(input_size), num_circuits + 2)
-                s_range = list(set(s_range))[0:num_circuits]
-        
+                s_range = np.random.choice(range(input_size), num_circuits, False)
+                # s_range = np.random.randint(0, 2**(input_size), num_circuits + 2)    #this will give error
+                # s_range = list(set(s_range))[0:num_circuits]
         else:
             sys.exit("Invalid QFT method")
 
