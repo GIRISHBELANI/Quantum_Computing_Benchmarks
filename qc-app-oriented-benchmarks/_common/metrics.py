@@ -3950,11 +3950,111 @@ def test_metrics ():
 
 ##############################################################
 ### Function to create an Excel file from the JSON data:
-# import os
-# import json
+# # import os
+# # import json
+# import pandas as pd
+# from openpyxl.utils.dataframe import dataframe_to_rows         # pip install openpyxl
+# from openpyxl.styles import Alignment
+
+# def json_to_excel(benchmark_folder, api, backend_id):
+#     # Replace slashes in the backend_id
+#     backend_id = backend_id.replace("/", "_")
+
+#     # Define the path to the __data directory
+#     data_path = os.path.join(benchmark_folder, api, '__data')
+
+#     # Define the filename based on the backend_id
+#     filename = f"DATA-{backend_id}.json"
+#     file_path = os.path.join(data_path, filename)
+
+#     # Check if the file exists
+#     if not os.path.exists(file_path):
+#         print(f"File {file_path} does not exist.")
+#         return
+
+#     # Load the JSON data
+#     with open(file_path, 'r') as f:
+#         try:
+#             data = json.load(f)
+#         except Exception as e:
+#             print(f"Failed to load JSON data: {e}")
+#             return
+
+#     # Define the Excel filename
+#     excel_filename = f"DATA-{benchmark_folder}-{api}-{backend_id}.xlsx"
+#     writer = pd.ExcelWriter(excel_filename, engine='openpyxl')
+
+#     # Process each app separately
+#     for app, metrics in data.items():
+#         # Create a DataFrame for the group_metrics
+#         group_metrics = metrics.get('group_metrics', {})
+
+#         # Extract groups and check lengths
+#         groups = group_metrics.get('groups', [])
+#         lengths = {len(v) for k, v in group_metrics.items() if isinstance(v, list) and k != 'groups'}
+#         if len(lengths) > 1:
+#             print(f"Inconsistent lengths of lists in group_metrics for app {app}")
+#             continue
+#         length = lengths.pop() if lengths else 1
+
+#         # Flatten nested lists and create rows
+#         rows = []
+#         for i in range(len(groups)):
+#             row = {'groups': groups[i]}
+#             for key, value in group_metrics.items():
+#                 if isinstance(value, list):
+#                     row[key] = value[i] if i < len(value) else None
+#                 else:
+#                     row[key] = value
+#             rows.append(row)
+
+#         df = pd.DataFrame(rows) 
+        
+#         df = df.drop("job_ids", axis=1)
+        
+#         # Access the writer's workbook to create a new sheet
+#         workbook = writer.book
+#         sheet = workbook.create_sheet(title=app)
+
+#         # Write the app name as a heading
+#         title_row = [app]
+#         sheet.append(title_row + [''] * (len(df.columns) - 1))
+    
+#         # Merge cells for the title row
+#         title_cell_range = f'A{sheet.max_row}:U{sheet.max_row}'
+#         sheet.merge_cells(title_cell_range)
+        
+#         # Center align all cells in the worksheet
+#         for row in sheet.iter_rows():
+#             for cell in row:
+#                 cell.alignment = Alignment(horizontal='center')
+            
+#         # sheet.append([app])
+#         sheet.append([])  # Add an empty row
+
+#         # Write the DataFrame to the worksheet
+#         for r in dataframe_to_rows(df, index=False, header=True):
+#             sheet.append(r)
+
+#         # Add another empty row for separation
+#         sheet.append([])
+
+#     # Save and close the workbook
+#     writer.close()
+#     print(f"Data successfully written to {excel_filename}")
+
+#######################################################################
+
+import os
+import json
 import pandas as pd
-from openpyxl.utils.dataframe import dataframe_to_rows         # pip install openpyxl
+from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Alignment
+from openpyxl import Workbook
+
+def pad_list(lst, length):
+    """Pad a list with None values to the specified length."""
+    return lst + [None] * (length - len(lst))
 
 def json_to_excel(benchmark_folder, api, backend_id):
     # Replace slashes in the backend_id
@@ -3984,20 +4084,30 @@ def json_to_excel(benchmark_folder, api, backend_id):
     excel_filename = f"DATA-{benchmark_folder}-{api}-{backend_id}.xlsx"
     writer = pd.ExcelWriter(excel_filename, engine='openpyxl')
 
+    # Create a workbook if it doesn't exist
+    workbook = writer.book if writer.book else Workbook()
+
+    # # Ensure there is at least one visible sheet before processing
+    # if not workbook.worksheets:
+    #     workbook.create_sheet(title="Sheet1")
+
     # Process each app separately
     for app, metrics in data.items():
         # Create a DataFrame for the group_metrics
         group_metrics = metrics.get('group_metrics', {})
 
-        # Extract groups and check lengths
+        # Extract groups
         groups = group_metrics.get('groups', [])
-        lengths = {len(v) for k, v in group_metrics.items() if isinstance(v, list) and k != 'groups'}
-        if len(lengths) > 1:
-            print(f"Inconsistent lengths of lists in group_metrics for app {app}")
-            continue
-        length = lengths.pop() if lengths else 1
 
-        # Flatten nested lists and create rows
+        # Find the maximum length of lists in group_metrics
+        max_length = max(len(v) for k, v in group_metrics.items() if isinstance(v, list))
+
+        # Normalize the lengths of all lists by padding with None
+        for key, value in group_metrics.items():
+            if isinstance(value, list):
+                group_metrics[key] = pad_list(value, max_length)
+
+        # Create rows by flattening the group metrics
         rows = []
         for i in range(len(groups)):
             row = {'groups': groups[i]}
@@ -4008,39 +4118,42 @@ def json_to_excel(benchmark_folder, api, backend_id):
                     row[key] = value
             rows.append(row)
 
-        df = pd.DataFrame(rows) 
-        
-        df = df.drop("job_ids", axis=1)
-        
-        # Access the writer's workbook to create a new sheet
-        workbook = writer.book
+        df = pd.DataFrame(rows)
+
+        # Drop unwanted columns if they exist
+        if 'job_ids' in df.columns:
+            df = df.drop('job_ids', axis=1)
+
+        # Create a new sheet in the workbook for each app
         sheet = workbook.create_sheet(title=app)
 
         # Write the app name as a heading
-        title_row = [app]
-        sheet.append(title_row + [''] * (len(df.columns) - 1))
-    
+        sheet.append([app] + [''] * (len(df.columns) - 1))
+
         # Merge cells for the title row
-        title_cell_range = f'A{sheet.max_row}:U{sheet.max_row}'
+        title_cell_range = f'A{sheet.max_row}:{chr(65 + len(df.columns) - 1)}{sheet.max_row}'
         sheet.merge_cells(title_cell_range)
-        
-        # Center align all cells in the worksheet
-        for row in sheet.iter_rows():
+
+        # Center align the title
+        for row in sheet.iter_rows(min_row=sheet.max_row, max_row=sheet.max_row):
             for cell in row:
                 cell.alignment = Alignment(horizontal='center')
-            
-        # sheet.append([app])
-        sheet.append([])  # Add an empty row
+
+        # Add an empty row
+        sheet.append([])
 
         # Write the DataFrame to the worksheet
         for r in dataframe_to_rows(df, index=False, header=True):
             sheet.append(r)
 
-        # Add another empty row for separation
+        # Center-align all data cells
+        for row in sheet.iter_rows(min_row=sheet.max_row - len(df) - 1, max_row=sheet.max_row):
+            for cell in row:
+                cell.alignment = Alignment(horizontal='center')
+
+        # Add an empty row for separation
         sheet.append([])
 
-    # Save and close the workbook
     writer.close()
     print(f"Data successfully written to {excel_filename}")
 
-#######################################################################
