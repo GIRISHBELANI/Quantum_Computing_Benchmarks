@@ -94,6 +94,10 @@ def analyze_and_print_result(qc, result, num_counting_qubits, theta, num_shots):
 
     # get results as times a particular theta was measured    
     counts = bitstring_to_theta(counts_str, num_counting_qubits)
+
+    # Convert keys of counts to strings
+    counts = {str(key): value for key, value in counts.items()}
+    
     if verbose: print(f"For theta value {theta}, measured: {counts}")
     
     # correct distribution is measuring theta 100% of the time
@@ -185,6 +189,8 @@ def run(min_qubits=3, max_qubits=8, max_circuits=3, num_shots=1000,
             
             qc = PhaseEstimation(num_qubits, theta)
             metrics.store_metric(num_qubits, theta, 'create_time', time.time() - ts)
+
+            qc = cirq.Circuit(cirq.decompose(op) for op in qc.all_operations())
 
             # submit circuit for execution on target (simulator, cloud simulator, or hardware)
             ex.submit_circuit(qc, num_qubits, theta, num_shots)
