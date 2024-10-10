@@ -1,0 +1,260 @@
+Monte Carlo Sampling (2) Benchmark Program - Qiskit
+... execution starting at Oct 07, 2024 11:43:37 UTC
+************
+Executing [1] circuits with num_qubits = 4
+************
+Executing [1] circuits with num_qubits = 5
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 4 qubit group = 202, 0.398
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 4 qubit group = 208, 0.372, 96.0
+Average Creation, Elapsed, Execution Time for the 4 qubit group = 0.025, 3.369, 3.044 secs
+Average Transpiling, Validating, Running Times for group 4 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 4 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 6
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 5 qubit group = 468, 0.401
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 5 qubit group = 479, 0.377, 224.0
+Average Creation, Elapsed, Execution Time for the 5 qubit group = 0.026, 1.886, 0.033 secs
+Average Transpiling, Validating, Running Times for group 5 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 5 qubit group = 1.0, 0.999
+
+************
+Executing [1] circuits with num_qubits = 7
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 6 qubit group = 997, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 6 qubit group = 1017, 0.38, 478.0
+Average Creation, Elapsed, Execution Time for the 6 qubit group = 0.04, 2.01, 0.094 secs
+Average Transpiling, Validating, Running Times for group 6 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 6 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 8
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 7 qubit group = 2049, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 7 qubit group = 2086, 0.382, 982.0
+Average Creation, Elapsed, Execution Time for the 7 qubit group = 0.109, 5.669, 0.228 secs
+Average Transpiling, Validating, Running Times for group 7 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 7 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 9
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 8 qubit group = 4144, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 8 qubit group = 4214, 0.382, 1984.0
+Average Creation, Elapsed, Execution Time for the 8 qubit group = 0.38, 12.821, 0.295 secs
+Average Transpiling, Validating, Running Times for group 8 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 8 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 10
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 9 qubit group = 8322, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 9 qubit group = 8457, 0.383, 3980.0
+Average Creation, Elapsed, Execution Time for the 9 qubit group = 0.472, 33.206, 0.982 secs
+Average Transpiling, Validating, Running Times for group 9 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 9 qubit group = 0.998, 0.998
+
+************
+Executing [1] circuits with num_qubits = 11
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 10 qubit group = 16663, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 10 qubit group = 16927, 0.383, 7962.0
+Average Creation, Elapsed, Execution Time for the 10 qubit group = 3.153, 56.609, 3.285 secs
+Average Transpiling, Validating, Running Times for group 10 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 10 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 12
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 11 qubit group = 33327, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 11 qubit group = 33848, 0.383, 15914.0
+Average Creation, Elapsed, Execution Time for the 11 qubit group = 5.018, 125.029, 5.443 secs
+Average Transpiling, Validating, Running Times for group 11 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 11 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 13
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 12 qubit group = 66634, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 12 qubit group = 67668, 0.383, 31804.0
+Average Creation, Elapsed, Execution Time for the 12 qubit group = 10.52, 217.838, 9.846 secs
+Average Transpiling, Validating, Running Times for group 12 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 12 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 14
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 13 qubit group = 133224, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 13 qubit group = 135283, 0.383, 63568.0
+Average Creation, Elapsed, Execution Time for the 13 qubit group = 16.755, 312.815, 7.123 secs
+Average Transpiling, Validating, Running Times for group 13 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 13 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 15
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 14 qubit group = 266377, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 14 qubit group = 270485, 0.383, 127078.0
+Average Creation, Elapsed, Execution Time for the 14 qubit group = 16.831, 780.611, 25.124 secs
+Average Transpiling, Validating, Running Times for group 14 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 14 qubit group = 0.999, 0.999
+
+************
+Executing [1] circuits with num_qubits = 16
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 15 qubit group = 532653, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 15 qubit group = 540858, 0.383, 254078.0
+Average Creation, Elapsed, Execution Time for the 15 qubit group = 38.542, 1349.887, 71.936 secs
+Average Transpiling, Validating, Running Times for group 15 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 15 qubit group = 0.999, 0.999
+
+************
+Executing [1] circuits with num_qubits = 17
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 16 qubit group = 1065172, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 16 qubit group = 1081570, 0.383, 508056.0
+Average Creation, Elapsed, Execution Time for the 16 qubit group = 110.896, 3445.324, 805.362 secs
+Average Transpiling, Validating, Running Times for group 16 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 16 qubit group = 0.999, 0.999
+
+************
+Executing [1] circuits with num_qubits = 18
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 17 qubit group = 2130174, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 17 qubit group = 2162957, 0.383, 1015988.0
+Average Creation, Elapsed, Execution Time for the 17 qubit group = 855.9, 40874.583, 35756.025 secs
+Average Transpiling, Validating, Running Times for group 17 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 17 qubit group = 0.999, 0.999
+
+^[[3~^C^C^C^C^C^C^C^Z
+[1]+  Stopped                 python mc_benchmark.py
+(qiskit0.45.1_gpu) girish@qc:~/Quantum_Computing_Benchmarks/qc-app-oriented-benchmarks/monte-carlo/qiskit$ python mc_benchmark.py 
+Monte Carlo Sampling (2) Benchmark Program - Qiskit
+... execution starting at Oct 08, 2024 03:45:40 UTC
+************
+Executing [1] circuits with num_qubits = 4
+************
+Executing [1] circuits with num_qubits = 5
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 4 qubit group = 202, 0.398
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 4 qubit group = 208, 0.372, 96.0
+Average Creation, Elapsed, Execution Time for the 4 qubit group = 0.02, 3.966, 3.476 secs
+Average Transpiling, Validating, Running Times for group 4 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 4 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 6
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 5 qubit group = 468, 0.401
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 5 qubit group = 479, 0.377, 224.0
+Average Creation, Elapsed, Execution Time for the 5 qubit group = 3.503, 2.316, 0.108 secs
+Average Transpiling, Validating, Running Times for group 5 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 5 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 7
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 6 qubit group = 997, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 6 qubit group = 1017, 0.38, 478.0
+Average Creation, Elapsed, Execution Time for the 6 qubit group = 0.143, 2.96, 0.189 secs
+Average Transpiling, Validating, Running Times for group 6 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 6 qubit group = 0.999, 0.999
+
+************
+Executing [1] circuits with num_qubits = 8
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 7 qubit group = 2049, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 7 qubit group = 2086, 0.382, 982.0
+Average Creation, Elapsed, Execution Time for the 7 qubit group = 0.265, 7.407, 0.131 secs
+Average Transpiling, Validating, Running Times for group 7 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 7 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 9
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 8 qubit group = 4144, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 8 qubit group = 4214, 0.382, 1984.0
+Average Creation, Elapsed, Execution Time for the 8 qubit group = 1.779, 16.38, 0.498 secs
+Average Transpiling, Validating, Running Times for group 8 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 8 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 10
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 9 qubit group = 8322, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 9 qubit group = 8457, 0.383, 3980.0
+Average Creation, Elapsed, Execution Time for the 9 qubit group = 0.739, 36.285, 1.159 secs
+Average Transpiling, Validating, Running Times for group 9 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 9 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 11
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 10 qubit group = 16663, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 10 qubit group = 16927, 0.383, 7962.0
+Average Creation, Elapsed, Execution Time for the 10 qubit group = 3.292, 74.782, 4.065 secs
+Average Transpiling, Validating, Running Times for group 10 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 10 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 12
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 11 qubit group = 33327, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 11 qubit group = 33848, 0.383, 15914.0
+Average Creation, Elapsed, Execution Time for the 11 qubit group = 6.28, 166.512, 6.229 secs
+Average Transpiling, Validating, Running Times for group 11 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 11 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 13
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 12 qubit group = 66634, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 12 qubit group = 67668, 0.383, 31804.0
+Average Creation, Elapsed, Execution Time for the 12 qubit group = 12.974, 180.789, 11.581 secs
+Average Transpiling, Validating, Running Times for group 12 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 12 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 14
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 13 qubit group = 133224, 0.403
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 13 qubit group = 135283, 0.383, 63568.0
+Average Creation, Elapsed, Execution Time for the 13 qubit group = 19.665, 271.545, 6.836 secs
+Average Transpiling, Validating, Running Times for group 13 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 13 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 15
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 14 qubit group = 266377, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 14 qubit group = 270485, 0.383, 127078.0
+Average Creation, Elapsed, Execution Time for the 14 qubit group = 16.083, 352.21, 9.73 secs
+Average Transpiling, Validating, Running Times for group 14 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 14 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 16
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 15 qubit group = 532653, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 15 qubit group = 540858, 0.383, 254078.0
+Average Creation, Elapsed, Execution Time for the 15 qubit group = 17.589, 768.27, 50.38 secs
+Average Transpiling, Validating, Running Times for group 15 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 15 qubit group = 1.0, 1.0
+
+************
+Executing [1] circuits with num_qubits = 17
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 16 qubit group = 1065172, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 16 qubit group = 1081570, 0.383, 508056.0
+Average Creation, Elapsed, Execution Time for the 16 qubit group = 68.792, 1743.54, 352.121 secs
+Average Transpiling, Validating, Running Times for group 16 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 16 qubit group = 1.0, 1.0
+
+************
+Average Circuit Algorithmic Depth, ξ (xi) for the 17 qubit group = 2130174, 0.402
+Average Normalized Transpiled Depth, ξ (xi), 2q gates for the 17 qubit group = 2162957, 0.383, 1015988.0
+Average Creation, Elapsed, Execution Time for the 17 qubit group = 390.006, 29857.725, 29474.821 secs
+Average Transpiling, Validating, Running Times for group 17 = 0.001, 0.001, 0.001 secs
+Average Hellinger, Normalized Fidelity for the 17 qubit group = 0.999, 0.999

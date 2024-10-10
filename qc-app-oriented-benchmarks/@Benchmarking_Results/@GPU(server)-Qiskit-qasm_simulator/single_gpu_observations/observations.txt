@@ -1,0 +1,48 @@
+
+***Create conda environment:
+conda create -n qiskit0.45.1_gpu python=3.10 -y
+conda activate qiskit0.45.1_gpu
+
+***Installation Steps:
+
+pip install qiskit==0.45.1 numpy matplotlib jupyterlab pandas openpyxl
+
+pip install qiskit-aer-gpu==0.13.2
+
+Observations: 
+*given parameters* 
+min_qubits=8
+max_qubits=31
+skip_qubits=1
+max_circuits=1
+num_shots=1000
+backend_id="qasm_simulator"
+
+If we are using exec_options= {"device" : "GPU"} for single GPU usage, then benchmarks like DJ, BV[method-1 & 2], Hidden Shift, QFT[method-1 & 2], Hamiltonian Simulation, Shor(1) will run using only 1 single GPU upto 31 qubits.
+	HHL runs upto 21 qubits using both GPUs then after 21 qubits execution shifts to CPU (CPU is using only 1 core 100% and stops using GPUs)(only for once it has executed upto 25qubits using GPUs that observation is saved in JSON file and __images folder){result: got fidelities=0 after 11th qubit}
+	Shor(2) runs upto 18 qubits using both GPUs after that giving error (ValueError: Exceeds the limit (4300) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit)
+	VQE will run upto 12qubits (according to its algorithm) using CPU (CPU is using only 1 core 100%)
+	AE, Grovers, PE, Monte Carlo is using only CPU (CPU is using only 1 core 100%) (or once or twice it will show 2-3% GPU usage only for 1-2 seconds)
+	
+***************************
+
+***ISSUE : ***
+After installation of qiskit==0.45.1, if we install and then uninstall qiskit-aer (as suggested in Qiskit-Aer-GPU-Doi.pdf) then all the observations same as above, but only in case of Shor's Algorithm method-1 will run only upto 22-qubits and method-2 upto 14-qubits (sometimes maybe upto 16) after that it will throw error. (ValueError: Exceeds the limit (4300) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit)
+
+Install and then uninstall qiskit-aer
+pip install qiskit-aer==0.13.2
+pip uninstall qiskit-aer==0.13.2 -y
+
+****************************
+
+***If we increase the max_circuit (let say max_circuit=3 or 5 or 10)
+then the benchmarks which are utilising CPU 100% (i.e. only 1 core) and not using GPU, they will start using GPU only upto few percentage. For starting qubits they will use 2-3% of GPU (only for couple of seconds rest of the time it will be 0%), on executing further qubits GPU utilisation also increases but readings are shown only for couple of seconds (upto 50-65% GPU)
+
+Note: GPU% utilisation depends on benchmarks for ex: in case of Grovers, on executing 11th qubit GPU reading once showed 5% then rest of the execution time of that qubit it was 0%. whereas in case of Monte Carlo it went upto 65% in 11th qubit (will increase for further qubits) only for 1-2 seconds.
+
+Note: In case of PE, 3% GPU used for 20th qubit(for single GPU). If we run PE, on multiple GPU it will execute on both GPUs (varying between 0% to any % 20-30-50)
+
+In case of AE, taken max_circuit=10, for single GPU, once or twice only it will show reading. for multiple GPU, it will show reading once while executing some qubits but only for 1 second (rest of the time it will show 0% GPU usage)
+
+*******************************
+

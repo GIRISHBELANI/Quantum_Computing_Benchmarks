@@ -1,0 +1,85 @@
+For multiple-GPU usage, exec_options = {"device" : "GPU", "blocking_qubits":15} will be applied.
+
+blocking_qubits:
+The blocking_qubits parameter is used to manage GPU memory and computational resources by limiting the number of qubits processed at the same time. Setting this parameter helps in optimizing the performance and memory usage of the simulator on GPU hardware.
+When using multiple GPUs, blocking_qubits can help in balancing the workload across GPUs and ensuring efficient use of available resources.
+
+Potential Performance Improvements: 
+For certain workloads, increasing blocking_qubits can lead to performance improvements because it allows the simulator to perform operations on a larger number of qubits in parallel. This can make better use of the GPU’s computational power.
+
+
+Observations:
+
+1) Bernstein-Vazirani after 10 and 15 qubits using blocking_qubits=10 and blocking_qubits=15 respectively, reduce fidelities upto between 0.45 to 0.50, even in ideal codition which not as expected.
+
+
+fig: Bernstein-Vazirani(1) using `exec_options = {"device" : "GPU", "blocking_qubits":10}`
+
+
+
+
+
+
+
+
+
+fig: Bernstein-Vazirani(1) using `exec_options = {"device" : "GPU", "blocking_qubits":15}`
+
+
+
+
+2) Hidden-Shit, QFT, Hamiltonian getting fidelities zero for some qubits or lies between 0-0.25
+
+[less no. of qubits getting zero fidelity in case of larger blocking qubits]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Issue with using less blocking_qubit (for ex: blocking_qubits = 10):
+1) Elapsed time and Execution time will be more as compared to if more blocking_qubits assigned 
+
+ smaller blocking_qubits value is resulting in significantly longer execution and elapsed times compared to a larger blocking_qubit
+
+For ex: comparison between "blocking_qubits":10 & "blocking_qubits":15
+
+
+
+
+fig: Bernstein-Vazirani(1) using `exec_options = {"device" : "GPU", "blocking_qubits":10}`
+
+
+
+fig: Bernstein-Vazirani(1) using `exec_options = {"device" : "GPU", "blocking_qubits":15}`
+
+
+
+2) Most of the qubits will execute on multiple-GPUs but after significant no. of qubits executed it will switched to CPU.
+
+    • Switching to CPU: When the simulation exceeds the GPU’s capacity, it switches to the CPU for additional processing. Since only one CPU core is used, this results in slower performance compared to the parallel processing capabilities of the GPU. The transition to CPU processing can also introduce overhead and inefficiencies.
+    • Single-Core CPU Bottleneck: When switching to CPU, if only a single core is used, the computation becomes significantly slower. Modern CPUs have multiple cores, but the simulator’s design or configuration might limit it to using only one core for certain tasks, further impacting performance.
+    • Memory Bandwidth and Transfer Overhead: Moving data between GPU and CPU can introduce additional latency. The overhead from transferring data and context switching can slow down the simulation, especially if it happens frequently.
+    • Load Balancing Challenges: Efficient load balancing between GPUs and CPU is complex. The simulator may not be optimized to distribute the load evenly, leading to situations where the CPU handles a disproportionate amount of work, further affecting performance.
+    • Increased Overhead: When blocking_qubits is small, the simulator may perform additional overhead operations more frequently. This can include data transfers between the CPU and GPU, which can slow down the simulation. Larger blocking_qubits can reduce this overhead by processing more qubits in each batch.
+      
+    • GPU Utilization Efficiency: With fewer blocking qubits, the GPU may not be fully utilized, leading to idle times and suboptimal performance. This can result in more qubits being processed on the CPU, which is generally slower.
+      
+    • Context Switching Overhead: When qubits are moved between GPUs and CPUs, context switching can introduce overhead and delay. Lower values for blocking_qubits might increase the frequency of such context switches, leading to longer execution times.
+
+For ex: after 28 qubits, it starts using CPU (only 1 core), with minimal usage of GPUs occasionally leads to more execution time due to lower blocking_qubits whereas with larger blocking_qubits it will execute within few seconds
+
+
+
+fig: Bernstein-Vazirani(1) with blocking_qubits = 10
+
+
+fig: Bernstein-Vazirani(1) with blocking_qubits = 15
