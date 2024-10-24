@@ -176,4 +176,4 @@ python _common/fake_backend/benchmark_runner.py --algorithm "amplitude-estimatio
 
 Below is a table showing the degree to which the benchmarks have been implemented in each of the target platforms (as of the last update to this branch):
 
-![Prototype Benchmarks - Implementation Status](./_doc/images/proto_benchmarks_status.png)
+![Application-Oriented Benchmarks - Implementation Status](./_doc/images/proto_benchmarks_status.png)
