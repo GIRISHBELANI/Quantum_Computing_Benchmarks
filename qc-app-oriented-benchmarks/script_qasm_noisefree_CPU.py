@@ -268,9 +268,9 @@ sys.path[1:1] = [ "_common", "_common/qiskit" ]
 import execute as ex
 import metrics as metrics
 
-ex.noise = {noise} 
+ex.noise = None
 metrics.show_plot_images = False
-metrics.data_suffix = "{data_suffix}"
+metrics.data_suffix = "{metrics.data_suffix}"
 
 sys.path.insert(1, "maxcut/qiskit")
 import maxcut_benchmark
@@ -279,7 +279,7 @@ max_qubits = 22
 
 # Run the MaxCut benchmark
 maxcut_benchmark.run(
-    min_qubits={min_qubits}, max_qubits={max_qubits}, max_circuits={max_circuits}, num_shots={num_shots},
+    min_qubits={min_qubits}, max_qubits=max_qubits, max_circuits={max_circuits}, num_shots={num_shots},
     method=1, rounds=1, do_fidelities=True,
     backend_id='{backend_id}', provider_backend={provider_backend},
     hub='{hub}', group='{group}', project='{project}',
@@ -306,9 +306,6 @@ maxcut_benchmark.run(
 
 
 if __name__ == "__main__":
-    
-    noise=ex.noise
-    data_suffix=metrics.data_suffix
 
     # Run MaxCut benchmark in a subprocess
     run_maxcut()

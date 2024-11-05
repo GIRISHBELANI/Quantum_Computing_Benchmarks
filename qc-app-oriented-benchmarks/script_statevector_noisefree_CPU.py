@@ -10,7 +10,7 @@ ex.noise = None
 metrics.show_plot_images = False
 metrics.data_suffix = "_noisefree"
 
-min_qubits=6
+min_qubits=8
 max_qubits=31
 skip_qubits=1
 max_circuits=3
@@ -23,7 +23,7 @@ exec_options = {}
 
 # -----------------------------------------------Deutsch-Jozsa-----------------------------------------------
 
-max_qubits=24
+max_qubits=26
 
 sys.path.insert(1, "deutsch-jozsa/qiskit")
 import dj_benchmark
@@ -36,7 +36,7 @@ dj_benchmark.run(min_qubits=min_qubits, max_qubits=max_qubits, skip_qubits=skip_
 
 # -----------------------------------------------Bernstein-Vazirani-----------------------------------------------
 
-max_qubits=25
+max_qubits=26
 
 sys.path.insert(1, "bernstein-vazirani/qiskit")
 import bv_benchmark
@@ -271,9 +271,9 @@ sys.path[1:1] = [ "_common", "_common/qiskit" ]
 import execute as ex
 import metrics as metrics
 
-ex.noise = {noise} 
+ex.noise = None
 metrics.show_plot_images = False
-metrics.data_suffix = "{data_suffix}"
+metrics.data_suffix = "{metrics.data_suffix}"
 
 sys.path.insert(1, "maxcut/qiskit")
 import maxcut_benchmark
@@ -309,9 +309,6 @@ maxcut_benchmark.run(
 
 
 if __name__ == "__main__":
-    
-    noise=ex.noise
-    data_suffix=metrics.data_suffix
 
     # Run MaxCut benchmark in a subprocess
     run_maxcut()

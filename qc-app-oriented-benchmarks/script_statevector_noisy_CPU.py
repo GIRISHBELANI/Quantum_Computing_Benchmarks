@@ -10,7 +10,7 @@ ex.noise = ex.default_noise_model()
 metrics.show_plot_images = False
 metrics.data_suffix = "_noisy"
 
-min_qubits=6
+min_qubits=8
 max_qubits=31
 skip_qubits=1
 max_circuits=3
@@ -23,7 +23,7 @@ exec_options = {}
 
 # -----------------------------------------------Deutsch-Jozsa-----------------------------------------------
 
-max_qubits=24
+max_qubits=26
 
 sys.path.insert(1, "deutsch-jozsa/qiskit")
 import dj_benchmark
@@ -36,7 +36,7 @@ dj_benchmark.run(min_qubits=min_qubits, max_qubits=max_qubits, skip_qubits=skip_
 
 # -----------------------------------------------Bernstein-Vazirani-----------------------------------------------
 
-max_qubits=25
+max_qubits=26
 
 sys.path.insert(1, "bernstein-vazirani/qiskit")
 import bv_benchmark
@@ -130,7 +130,7 @@ hamiltonian_simulation_benchmark.run(min_qubits=min_qubits, max_qubits=max_qubit
 
 # -----------------------------------------------Grover's-Search--------------------------------------------------
 
-max_qubits=13
+max_qubits=11
 
 sys.path.insert(1, "grovers/qiskit")
 import grovers_benchmark
@@ -261,7 +261,7 @@ hydrogen_lattice_benchmark.run(
 
 
 # -----------------------------------------------MaxCut-QAOA-Algorithm-----------------------------------------------------
-
+import subprocess, os
 # Function to run MaxCut-QAOA algorithm using subprocess
 def run_maxcut():
     script = f"""
@@ -271,9 +271,9 @@ sys.path[1:1] = [ "_common", "_common/qiskit" ]
 import execute as ex
 import metrics as metrics
 
-ex.noise = {noise} 
+ex.noise = ex.default_noise_model()
 metrics.show_plot_images = False
-metrics.data_suffix = "{data_suffix}"
+metrics.data_suffix = "{metrics.data_suffix}"
 
 sys.path.insert(1, "maxcut/qiskit")
 import maxcut_benchmark
@@ -282,7 +282,7 @@ max_qubits = 22
 
 # Run the MaxCut benchmark
 maxcut_benchmark.run(
-    min_qubits={min_qubits}, max_qubits={max_qubits}, max_circuits={max_circuits}, num_shots={num_shots},
+    min_qubits={min_qubits}, max_qubits=max_qubits, max_circuits={max_circuits}, num_shots={num_shots},
     method=1, rounds=1, do_fidelities=True,
     backend_id='{backend_id}', provider_backend={provider_backend},
     hub='{hub}', group='{group}', project='{project}',
@@ -309,9 +309,6 @@ maxcut_benchmark.run(
 
 
 if __name__ == "__main__":
-    
-    noise=ex.noise
-    data_suffix=metrics.data_suffix
 
     # Run MaxCut benchmark in a subprocess
     run_maxcut()
