@@ -258,7 +258,7 @@ hydrogen_lattice_benchmark.run(
 
 
 # -----------------------------------------------MaxCut-QAOA-Algorithm-----------------------------------------------------
-
+import subprocess, os
 # Function to run MaxCut-QAOA algorithm using subprocess
 def run_maxcut():
     script = f"""
