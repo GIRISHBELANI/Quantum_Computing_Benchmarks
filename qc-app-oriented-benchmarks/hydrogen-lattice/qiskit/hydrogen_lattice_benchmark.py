@@ -1048,7 +1048,7 @@ def plot_results_from_data(
 ################################################
 # RUN METHOD
 
-MAX_QUBITS = 31
+MAX_QUBITS = 16
 
 def run(
     min_qubits=2, max_qubits=8, skip_qubits=2, max_circuits=3, num_shots=1000,
