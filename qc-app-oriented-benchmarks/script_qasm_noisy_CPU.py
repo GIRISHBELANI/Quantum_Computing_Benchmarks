@@ -10,7 +10,7 @@ ex.noise = ex.default_noise_model()
 metrics.show_plot_images = False
 metrics.data_suffix = "_noisy"
 
-min_qubits=6
+min_qubits=8
 max_qubits=31
 skip_qubits=1
 max_circuits=3
