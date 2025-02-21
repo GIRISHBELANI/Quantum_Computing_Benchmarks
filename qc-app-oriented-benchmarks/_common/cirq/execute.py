@@ -31,7 +31,7 @@ import logging
 # logger for this module
 logger = logging.getLogger(__name__)
 
-import cirq, qsimcirq
+import cirq
 backend = cirq.Simulator()      # Use Cirq Simulator by default
 
 from collections import OrderedDict
@@ -94,7 +94,7 @@ def init_execution (handler):
     result_handler = handler
         
     # On initialize, always set trnaspilation for metrics and execute to True
-    set_transpilation_flags(do_transpile_metrics=True, do_transpile_for_execute=True)
+    set_tranpilation_flags(do_transpile_metrics=True, do_transpile_for_execute=True)
     
     # create an informative device name
     # this should be move to set_execution_target method later
@@ -111,29 +111,44 @@ def set_execution_target(backend_id='simulator', provider_backend=None):
     
     example usage.
     set_execution_target(backend_id='aqt_qasm_simulator', 
-                        provider_backend=aqt.backends.aqt_qasm_simulator)
+                        provider_backende=aqt.backends.aqt_qasm_simulator)
     """
-    global backend   
+    global backend
     
     # if a custom provider backend is given, use it ...
     if provider_backend != None:
         backend = provider_backend
-
+        
     # otherwise test for simulator
     elif backend_id == 'simulator':
         backend = cirq.Simulator()
-
-    elif backend_id == 'qsimsimulator':
-        qsim_options = qsimcirq.QSimOptions(cpu_threads=32, verbosity=1)
-        backend = qsimcirq.QSimSimulator(qsim_options=qsim_options)
-        print(f"Using QSimSimulator with options: {qsim_options}")
 
     elif backend_id == 'densitymatrixsimulator':
         backend = cirq.DensityMatrixSimulator()
 
     elif backend_id == 'cliffordsimulator':
         backend = cirq.CliffordSimulator()
-       
+        
+    elif backend_id == 'QSimSimulator':
+        import qsimcirq
+        # Define qsim options for better performance
+        qsim_options = qsimcirq.QSimOptions(cpu_threads=88)
+            
+        # Initialize the simulator with options
+        backend = qsimcirq.QSimSimulator(qsim_options=qsim_options)
+        if qsim_options:
+            print(backend, qsim_options)
+
+    elif backend_id == 'QSimSimulator_GPU':
+        import qsimcirq
+        # Define qsim options for better performance
+        gpu_options=qsimcirq.QSimOptions(use_gpu=True, gpu_mode=0)
+
+        # Initialize the simulator with options
+        backend = qsimcirq.QSimSimulator(qsim_options=gpu_options)
+        if gpu_options:
+            print(backend, gpu_options)
+            
     # nothing else is supported yet, default to simulator       
     else:
         print(f"ERROR: Unknown backend_id: {backend_id}, defaulting to Cirq Simulator")
@@ -233,7 +248,7 @@ def execute_circuit (batched_circuit):
         device.validate_circuit(circuit)
     
     job.result = backend.run(circuit, repetitions=shots)
-    
+
     # store circuit dimensional metrics
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'depth', qc_depth)
     metrics.store_metric(active_circuit["group"], active_circuit["circuit"], 'size', qc_size)
@@ -378,7 +393,7 @@ def count_ops(circuit: cirq.Circuit) -> OrderedDict[str, int]:
 ################################################################
 
 # Set the state of the transpilation flags
-def set_transpilation_flags(do_transpile_metrics = True, do_transpile_for_execute = True):
+def set_tranpilation_flags(do_transpile_metrics = True, do_transpile_for_execute = True):
     globals()['do_transpile_metrics'] = do_transpile_metrics
     globals()['do_transpile_for_execute'] = do_transpile_for_execute
 
