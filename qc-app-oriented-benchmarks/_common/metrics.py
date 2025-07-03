@@ -32,7 +32,7 @@
 import os
 import json
 import time
-from time import gmtime, strftime, localtime
+from time import gmtime, strftime
 from datetime import datetime, timedelta
 import traceback
 import matplotlib.cm as cm
@@ -73,6 +73,9 @@ verbose = False
 
 # Option to save metrics to data file
 save_metrics = True
+
+# Option to merge new group metrics into existing
+merge_group_metrics = False
 
 # Suffix to append to filename of DATA- files
 data_suffix = ""
@@ -437,7 +440,7 @@ def report_metrics_for_group (group):
             print(f"Average Creation, Elapsed, Execution Time for the {group} qubit group = {avg_create_time}, {avg_elapsed_time}, {avg_exec_time} secs")
             
             # report these detailed times, but only if they have been collected (i.e., len of array > 0)
-            # not all backedns generate these data elements
+            # not all backends generate these data elements
             if len(group_metrics["avg_exec_creating_times"]) > 0:
                 if len(group_metrics["avg_exec_creating_times"]) > group_index:
                     avg_exec_creating_time = group_metrics["avg_exec_creating_times"][group_index]
@@ -479,11 +482,22 @@ def report_metrics_for_group (group):
 def report_metrics ():   
     # loop over all groups and print metrics for that group
     for group in circuit_metrics:
-        report_metrics_for_group(group)
+        if mpi.leader():
+            report_metrics_for_group(group)
 
-       
+import inspect
+def get_benchmark_id():
+    # Inspect the call stack to find the calling script
+    stack = inspect.stack()
+    for frame in stack:
+        caller_path = frame.filename
+        if "benchmark.py" in caller_path:
+            benchmark_folder = os.path.basename(os.path.dirname(os.path.dirname(caller_path)))
+            return benchmark_folder
+    return "unknown"
+    
 # Aggregate and report on metrics for the given groups, if all circuits in the group are complete
-def finalize_group(group, report=True):
+def finalize_group(group, report=True, benchmark_id=None):
     group = str(group)
     
     #print(f"... finalize group={group}")
@@ -500,17 +514,20 @@ def finalize_group(group, report=True):
     #print(f"  ... group_done = {group} {group_done}")
     if group_done and report:
         aggregate_metrics_for_group(group)
-        print("************")
-        report_metrics_for_group(group)
+        if mpi.leader():
+            print("************")
+            report_metrics_for_group(group)
+    if benchmark_id is None:
+        benchmark_id = get_benchmark_id()
         
     # sort the group metrics (sometimes they come back out of order)
-    sort_group_metrics()
+    sort_group_metrics(benchmark_id=benchmark_id, backend_id=get_backend_id())
 
 
 #finalize_group(group, report=True);
 
 # sort the group array as integers, then all metrics relative to it
-def sort_group_metrics():
+def sort_group_metrics(benchmark_id=None, backend_id=None, save_path="interrupted_benchmark_metrics.json"):
 
     # get groups as integer, then sort each metric with it
     igroups = [int(group) for group in group_metrics["groups"]]
@@ -522,7 +539,28 @@ def sort_group_metrics():
     # save the sorted group names when all done 
     xy = sorted(zip(igroups, group_metrics["groups"]))    
     group_metrics["groups"] = [y for x, y in xy]
+    
+    # Prepare full snapshot under benchmark_id (and optionally backend)
+    new_entry = {
+        "backend_id": backend_id or "unknown",
+        "group_metrics": group_metrics
+    }
 
+    # Load existing file or create new
+    if os.path.exists(save_path):
+        with open(save_path) as f:
+            all_benchmark_data = json.load(f)
+    else:
+        all_benchmark_data = {}
+
+    # Add or update current benchmark block
+    all_benchmark_data[benchmark_id] = new_entry
+
+    # Save everything back to disk
+    with open(save_path, "w") as f:
+        json.dump(all_benchmark_data, f, indent=2)
+
+    # print(f" Appended metrics for '{benchmark_id}' to '{save_path}'")
 
 ######################################################
 # DATA ANALYSIS - LEVEL 2 METRICS - ITERATIVE CIRCUITS
@@ -549,8 +587,10 @@ def finalize_group_2_level(group):
         process_circuit_metrics_2_level(group)
         
         aggregate_metrics_for_group(group)
-        print("************")
-        report_metrics_for_group(group)
+        
+        if mpi.leader():
+            print("************")
+            report_metrics_for_group(group)
         
     # sort the group metrics (sometimes they come back out of order)
     sort_group_metrics()
@@ -893,7 +933,8 @@ def get_backend_title(backend_id=None):
 # Extract short app name from the title passed in by user
 def get_appname_from_title(suptitle):
     appname = suptitle[len('Benchmark Results - '):len(suptitle)]
-    appname = appname[:appname.index(' - ')]
+    if " - " in appname:
+        appname = appname[:appname.index(' - ')]
     
     # for creating plot image filenames replace spaces
     appname = appname.replace(' ', '-') 
@@ -909,6 +950,14 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 maxcut_style = os.path.join(dir_path,'maxcut.mplstyle')
 # plt.style.use(style_file)
 
+# Delete interrupted_benchmark_metrics.json if it exists
+def delete_metrics_file(path="interrupted_benchmark_metrics.json"):
+    if os.path.exists(path):
+        os.remove(path)
+        # print(f"Deleted '{path}'")
+    else:
+        print(f"File '{path}' not found. Nothing to delete.")
+        
 def autolabel(rects, ax, str='{:.3f}', text_color="black", ha='center', va='bottom'):
     for rect in rects:
         height = rect.get_height()
@@ -1564,6 +1613,8 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
         #display plot
         if show_plot_images:
             plt.show()
+            
+    delete_metrics_file()   # Delete interrupted_benchmark_metrics.json if it exists
 
 # Return the minimum value in an array, but if all elements 0, return 0.001
 def get_nonzero_min(array):
@@ -2872,7 +2923,8 @@ def plot_metrics_optgaps (suptitle="",
         if show_plot_images:
             plt.show()
 
-
+    delete_metrics_file()   # Delete interrupted_benchmark_metrics.json if it exists
+    
     ############################################################
     ##### Detailed optimality gaps plot
     
@@ -2974,9 +3026,16 @@ def store_app_metrics (backend_id, circuit_metrics, group_metrics, app, start_ti
     if app not in shared_data:
         shared_data[app] = { "circuit_metrics":None, "group_metrics":None }
     
-    shared_data[app]["backend_id"] = backend_id
-    shared_data[app]["start_time"] = start_time
-    shared_data[app]["end_time"] = end_time
+    # if merging data, merge the new data into the existing group metrics
+    if merge_group_metrics:
+        #merged_metrics = do_merge_group_metrics(existing_metrics, new_metrics) 
+        shared_data[app]["group_metrics"] = do_merge_group_metrics(shared_data[app]["group_metrics"], group_metrics) 
+    
+    # otherwise overwrite (the default mode)
+    else:
+        shared_data[app]["backend_id"] = backend_id
+        shared_data[app]["start_time"] = start_time
+        shared_data[app]["end_time"] = end_time
     
     shared_data[app]["group_metrics"] = group_metrics
 
@@ -3050,7 +3109,32 @@ def load_app_metrics (api, backend_id):
         
     return shared_data
             
+# Merge a new set of metrics into the existing set
+def do_merge_group_metrics(existing_metrics, new_metrics):
+
+    # Create a dictionary to map groups to their index in the existing metrics
+    group_index_map = {group: idx for idx, group in enumerate(existing_metrics['groups'])}
+
+    # Iterate through the new metrics
+    for idx, group in enumerate(new_metrics['groups']):
+        if group in group_index_map:
+            # If the group exists, update its metrics
+            existing_idx = group_index_map[group]
+            for key in existing_metrics:
+                if key != 'groups':
+                    existing_metrics[key][existing_idx] = new_metrics[key][idx]
+        else:
+            # If the group doesn't exist, add it to the existing metrics
+            existing_metrics['groups'].append(group)
+            for key in existing_metrics:
+                if key != 'groups':
+                    existing_metrics[key].append(new_metrics[key][idx])
             
+            # Update the group_index_map
+            group_index_map[group] = len(existing_metrics['groups']) - 1
+
+    return existing_metrics
+    
 ##############################################
 # VOLUMETRIC PLOT
 
@@ -3950,101 +4034,6 @@ def test_metrics ():
 
 ##############################################################
 ### Function to create an Excel file from the JSON data:
-# # import os
-# # import json
-# import pandas as pd
-# from openpyxl.utils.dataframe import dataframe_to_rows         # pip install openpyxl
-# from openpyxl.styles import Alignment
-
-# def json_to_excel(benchmark_folder, api, backend_id):
-#     # Replace slashes in the backend_id
-#     backend_id = backend_id.replace("/", "_")
-
-#     # Define the path to the __data directory
-#     data_path = os.path.join(benchmark_folder, api, '__data')
-
-#     # Define the filename based on the backend_id
-#     filename = f"DATA-{backend_id}.json"
-#     file_path = os.path.join(data_path, filename)
-
-#     # Check if the file exists
-#     if not os.path.exists(file_path):
-#         print(f"File {file_path} does not exist.")
-#         return
-
-#     # Load the JSON data
-#     with open(file_path, 'r') as f:
-#         try:
-#             data = json.load(f)
-#         except Exception as e:
-#             print(f"Failed to load JSON data: {e}")
-#             return
-
-#     # Define the Excel filename
-#     excel_filename = f"DATA-{benchmark_folder}-{api}-{backend_id}.xlsx"
-#     writer = pd.ExcelWriter(excel_filename, engine='openpyxl')
-
-#     # Process each app separately
-#     for app, metrics in data.items():
-#         # Create a DataFrame for the group_metrics
-#         group_metrics = metrics.get('group_metrics', {})
-
-#         # Extract groups and check lengths
-#         groups = group_metrics.get('groups', [])
-#         lengths = {len(v) for k, v in group_metrics.items() if isinstance(v, list) and k != 'groups'}
-#         if len(lengths) > 1:
-#             print(f"Inconsistent lengths of lists in group_metrics for app {app}")
-#             continue
-#         length = lengths.pop() if lengths else 1
-
-#         # Flatten nested lists and create rows
-#         rows = []
-#         for i in range(len(groups)):
-#             row = {'groups': groups[i]}
-#             for key, value in group_metrics.items():
-#                 if isinstance(value, list):
-#                     row[key] = value[i] if i < len(value) else None
-#                 else:
-#                     row[key] = value
-#             rows.append(row)
-
-#         df = pd.DataFrame(rows) 
-        
-#         df = df.drop("job_ids", axis=1)
-        
-#         # Access the writer's workbook to create a new sheet
-#         workbook = writer.book
-#         sheet = workbook.create_sheet(title=app)
-
-#         # Write the app name as a heading
-#         title_row = [app]
-#         sheet.append(title_row + [''] * (len(df.columns) - 1))
-    
-#         # Merge cells for the title row
-#         title_cell_range = f'A{sheet.max_row}:U{sheet.max_row}'
-#         sheet.merge_cells(title_cell_range)
-        
-#         # Center align all cells in the worksheet
-#         for row in sheet.iter_rows():
-#             for cell in row:
-#                 cell.alignment = Alignment(horizontal='center')
-            
-#         # sheet.append([app])
-#         sheet.append([])  # Add an empty row
-
-#         # Write the DataFrame to the worksheet
-#         for r in dataframe_to_rows(df, index=False, header=True):
-#             sheet.append(r)
-
-#         # Add another empty row for separation
-#         sheet.append([])
-
-#     # Save and close the workbook
-#     writer.close()
-#     print(f"Data successfully written to {excel_filename}")
-
-#######################################################################
-
 import os
 import json
 import pandas as pd
