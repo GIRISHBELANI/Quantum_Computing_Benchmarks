@@ -38,6 +38,7 @@ import traceback
 import matplotlib.cm as cm
 import copy
 import resource 
+import qcb_mpi as mpi
 
 # Raw and aggregate circuit metrics
 circuit_metrics = {  }
@@ -527,7 +528,7 @@ def finalize_group(group, report=True, benchmark_id=None):
 #finalize_group(group, report=True);
 
 # sort the group array as integers, then all metrics relative to it
-def sort_group_metrics(benchmark_id=None, backend_id=None, save_path="interrupted_benchmark_metrics.json"):
+def sort_group_metrics(benchmark_id=None, backend_id=None, save_path="execution_log.json"):
 
     # get groups as integer, then sort each metric with it
     igroups = [int(group) for group in group_metrics["groups"]]
@@ -950,8 +951,8 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 maxcut_style = os.path.join(dir_path,'maxcut.mplstyle')
 # plt.style.use(style_file)
 
-# Delete interrupted_benchmark_metrics.json if it exists
-def delete_metrics_file(path="interrupted_benchmark_metrics.json"):
+# Delete execution_log.json if it exists
+def delete_metrics_file(path="execution_log.json"):
     if os.path.exists(path):
         os.remove(path)
         # print(f"Deleted '{path}'")
@@ -1614,7 +1615,7 @@ def plot_metrics (suptitle="Circuit Width (Number of Qubits)", transform_qubit_g
         if show_plot_images:
             plt.show()
             
-    delete_metrics_file()   # Delete interrupted_benchmark_metrics.json if it exists
+    delete_metrics_file()   # Delete execution_log.json if it exists
 
 # Return the minimum value in an array, but if all elements 0, return 0.001
 def get_nonzero_min(array):
@@ -2923,7 +2924,7 @@ def plot_metrics_optgaps (suptitle="",
         if show_plot_images:
             plt.show()
 
-    delete_metrics_file()   # Delete interrupted_benchmark_metrics.json if it exists
+    delete_metrics_file()   # Delete execution_log.json if it exists
     
     ############################################################
     ##### Detailed optimality gaps plot
